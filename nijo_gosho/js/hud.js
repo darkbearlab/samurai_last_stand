@@ -129,7 +129,7 @@
     const html = {
       start: `<div class="eyebrow">${G.TX('eyebrow', '永祿八年五月十九日')} · 原型 v${G.CONFIG.version}</div><h1>${G.TX('title', '二條御所')}</h1>
         <p class="lead">${G.TX('lead', '御所已被包圍。手上只有一把脇差。去把散落在各房間的名刀收回來。')}</p>
-        ${G.TX('rules', rules)}${G.isTouch ? touch : desk}
+        ${G.TX('rules', rules)}${G.isTouch ? G.TX('touch', touch) : G.TX('desk', desk)}
         <p class="hint">這個原型只驗證刀戰手感：敵人會無止境地湧入，撐到倒下為止。火災、階段與結局尚未實作。</p>
         <div class="row"><button class="btn" id="go" type="button">出陣</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
       pause: `<div class="eyebrow">暫停</div><h1>一息</h1>${stats}<p class="hint">地圖種子 ${S && S.seed}</p><button class="btn" id="go" type="button">繼續</button>`,

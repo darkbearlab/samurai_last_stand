@@ -143,6 +143,7 @@
     drawMarks(w, h);
     // 準星
     uctx.fillStyle = 'rgba(255,240,210,.8)'; uctx.fillRect(cx - 1, cy - 1, 2, 2);
+    if (G.CONFIG.rhythm) return; // 節奏版有自己的 UI
     // 軌道與最佳區間
     uctx.lineCap = 'butt';
     uctx.strokeStyle = charging ? 'rgba(255,255,255,.22)' : 'rgba(255,255,255,.08)'; uctx.lineWidth = 3;

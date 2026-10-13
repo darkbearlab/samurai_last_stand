@@ -109,7 +109,7 @@
       cands.push({ e, d, ang });
     }
     cands.sort((a, c) => a.d - c.d);
-    const maxT = p.issen ? 1 : p.zone === 'sweet' && b.sweetCleave ? Math.max(b.sweetCleave, Z.cleave || 1) : Z.cleave || (p.zone === 'heavy' ? 6 : 1);
+    const maxT = p.issen ? Z.issenCleave || 1 : p.zone === 'sweet' && b.sweetCleave ? Math.max(b.sweetCleave, Z.cleave || 1) : Z.cleave || (p.zone === 'heavy' ? 6 : 1);
     let hits = 0, blocked = false;
     for (const c of cands) {
       if (hits >= maxT) break;
@@ -149,6 +149,7 @@
     if (blocked) P.recoilT = 0.25;
   }
 
+  G.resolveHit = (p) => resolveHit(p);
   function hitWall(amt, reach) {
     const P = G.S.P, R = G.cast(P.x, P.y, Math.cos(P.a), Math.sin(P.a));
     if (!R.c || R.dist > reach) return;

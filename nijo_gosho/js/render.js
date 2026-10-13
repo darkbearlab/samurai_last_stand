@@ -38,7 +38,7 @@
     if (e.dead) return 'dead';
     if (e.painT > 0) return 'pain';
     if (e.atkT > 0) return 'atk';
-    if (e.phase === 'windup' || e.phase === 'aim') return 'wind';
+    if (e.phase === 'windup' || e.phase === 'aim' || e.phase === 'threat') return 'wind';
     if (e.phase === 'reload') return 'reload';
     return e.moving && ((G.S.time * 4 + e.ph) | 0) % 2 ? 'w1' : 'w0';
   };

@@ -19,6 +19,7 @@
   G.updateEnemies = function (dt) {
     const S = G.S, P = S.P, pb = G.blade(P.cur);
     const awe = pb.restore === 'parry' && P.sharp[pb.id] > 0;
+    S.nThreat = 0; for (const e of S.enemies) if (!e.dead && e.phase === 'threat') S.nThreat++;
     for (const e of S.enemies) {
       if (e.dead) continue;
       if (e.frozen) { e.moving = false; continue; }
@@ -49,6 +50,19 @@
         if (e.phase === 'recover') { e.phT -= dt; if (e.phT <= 0) { e.phase = 'chase'; e.cd = G.rnd(T.cooldown[0], T.cooldown[1]) * slow; } continue; }
         if (see && d <= T.reach - 0.1 && e.cd <= 0) { e.phase = 'windup'; e.phT = e.wind = T.windup * slow; G.sfx('windup', d); continue; }
         if (see && d <= T.keep) continue;
+        moveToward(e, dt, see, d, T.speed);
+      } else if (T.kind === 'contact' && T.threat) {
+        // 節奏版：貼近後亮出紅圈，紅圈縮到底還沒被反擊就扣血
+        if (e.phase === 'threat') {
+          e.phT -= dt;
+          if (e.phT <= -G.CONFIG.rhythm.late) {
+            e.phase = 'chase'; e.touchCd = T.touchCd || 0.9; e.atkT = 0.15;
+            if (d < T.width + 1.2 && S.state === 'play') { G.hurtPlayer(G.rint(T.damage[0], T.damage[1]), false); G.move(P, (dx / (d || 1)) * 0.25, (dy / (d || 1)) * 0.25, G.ps().radius); }
+          }
+          continue;
+        }
+        e.touchCd -= dt;
+        if (d < T.width + 0.85 && e.touchCd <= 0 && S.state === 'play' && S.nThreat < G.CONFIG.rhythm.maxThreats) { e.phase = 'threat'; e.phT = e.wind = T.threat; S.nThreat++; G.sfx('windup', d); continue; }
         moveToward(e, dt, see, d, T.speed);
       } else if (T.kind === 'contact') {
         // 碰到就扣血：不出招，只管往前擠

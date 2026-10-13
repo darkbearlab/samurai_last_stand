@@ -7,6 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;900&family=Noto+Sans+TC:wght@400;700&display=swap">
 <link rel="stylesheet" href="../nijo_gosho/css/style.css">
+<style>#tParry, #tOugi { display: none; } #tSwap { bottom: calc(34% + 4px); right: 124px; }</style>
 </head>
 <body>
 <div id="app">
@@ -27,14 +28,14 @@
   <div id="hud">
     <div class="cell bars" id="hpCell">
       <div class="bar"><span class="lbl">命</span><div class="track hp"><i id="bHp"></i></div><b id="vHp">100</b></div>
-      <div class="bar"><span class="lbl">氣</span><div class="track st"><i id="bSt"></i></div></div>
+      <div class="bar" style="display:none"><span class="lbl">氣</span><div class="track st"><i id="bSt"></i></div></div>
     </div>
     <div class="cell blade" id="sharpCell">
       <div class="bname" id="bName">脇差</div>
-      <div class="bar" hidden><span class="lbl">鋒</span><div class="track sh"><i id="bSharp"></i></div></div>
+      <div class="bar" style="display:none"><span class="lbl">鋒</span><div class="track sh"><i id="bSharp"></i></div></div>
     </div>
     <div class="cell slots" id="slots"></div>
-    <div class="cell ougi" id="ougiCell"><span class="lbl">一之太刀</span><div class="track og"><i id="bOugi"></i></div></div>
+    <div class="cell ougi" id="ougiCell" style="display:none"><span class="lbl">一之太刀</span><div class="track og"><i id="bOugi"></i></div></div>
     <div class="cell kakugo"><span class="lbl">覺悟 <b id="vLevel">0</b></span><div class="track kg"><i id="bKakugo"></i></div></div>
     <div class="cell stat"><span class="lbl">時</span><b id="vTime">0:00</b></div>
     <div class="cell stat"><span class="lbl">斬</span><b id="vKills">0</b></div>
