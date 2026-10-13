@@ -215,8 +215,21 @@
     if (set === 'tateless') line(g, 46, 62, 60, 60, 1.4, COL.steel);
     if (set === 'tate') { g.fillStyle = '#6f5034'; g.fillRect(12, 52, 48, 9); g.fillStyle = COL.iron; g.fillRect(12, 54, 48, 2); }
   }
+  function drawYumi(g, f) { // 弓兵
+    const step = f === 'w1' ? 2 : 0;
+    body(g, step); head(g, f === 'wind' ? 1 : 0);
+    g.strokeStyle = '#4a2a18'; g.lineWidth = 1.6;
+    if (f === 'wind' || f === 'atk') {
+      g.beginPath(); g.arc(32, 30, 13, Math.PI * 0.75, Math.PI * 1.25, false); g.stroke();
+      g.beginPath(); g.ellipse(32, 30, 4, 13, 0, 0, Math.PI * 2); g.stroke();
+      g.fillStyle = '#e8e0cc'; circle(g, 32, 30, 2); arm(g, 20, 26, 28, 30); arm(g, 44, 26, 36, 31);
+    } else {
+      g.beginPath(); g.arc(14, 32, 16, -1.2, 1.2); g.stroke();
+      line(g, 20, 17, 20, 47, 0.6, '#d8cfb8'); arm(g, 20, 25, 18, 33); arm(g, 44, 25, 46, 38);
+    }
+  }
   // 變體可以替換這些繪製函式（在 buildAssets 之前）
-  const ENEMY_DRAW = (G.ENEMY_DRAW = { yari: drawYari, teppo: drawTeppo, tate: drawTate, tateless: drawTateless });
+  const ENEMY_DRAW = (G.ENEMY_DRAW = { yari: drawYari, teppo: drawTeppo, tate: drawTate, tateless: drawTateless, yumi: drawYumi });
   G.ENEMY_FRAMES = ['w0', 'w1', 'wind', 'atk', 'reload', 'pain', 'dead'];
 
   /* ---------- 道具與特效 ---------- */
@@ -252,6 +265,7 @@
     paper(g) { g.fillStyle = '#efe9da'; poly(g, 10, 20, 24, 14, 22, 28); poly(g, 34, 8, 50, 14, 40, 24); poly(g, 30, 40, 44, 36, 46, 52); poly(g, 12, 44, 22, 40, 20, 54); },
     wood(g) { g.fillStyle = '#6f5034'; poly(g, 8, 30, 30, 22, 32, 26, 10, 34); poly(g, 36, 12, 44, 10, 50, 36, 44, 38); poly(g, 20, 44, 40, 48, 38, 52, 18, 48); },
     smoke(g) { g.fillStyle = '#8a8680'; circle(g, 32, 34, 16); circle(g, 20, 28, 10); circle(g, 44, 26, 11); g.fillStyle = '#a19c95'; circle(g, 30, 28, 9); },
+    arrow(g) { line(g, 26, 26, 38, 38, 2, '#8a6a44'); line(g, 26, 38, 38, 26, 2, '#e8e0cc'); g.fillStyle = '#c9ccd2'; circle(g, 32, 32, 4); },
     bullet(g) { g.fillStyle = '#ff9a2a'; circle(g, 32, 32, 20); g.fillStyle = '#ffd27a'; circle(g, 32, 32, 13); g.fillStyle = '#fff6d8'; circle(g, 32, 32, 7); },
     pbullet(g) { g.fillStyle = '#7fd1ff'; circle(g, 32, 32, 20); g.fillStyle = '#cfefff'; circle(g, 32, 32, 13); g.fillStyle = '#ffffff'; circle(g, 32, 32, 7); },
   });

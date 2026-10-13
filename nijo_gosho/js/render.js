@@ -28,6 +28,10 @@
   G.marks = [];
   G.viewSize = () => [W, H];
   function shade(c, s) { return 0xff000000 | ((((c >>> 16) & 255) * s) >> 8 << 16) | ((((c >>> 8) & 255) * s) >> 8 << 8) | (((c & 255) * s) >> 8); }
+  function tint(c, k) { // 往紅色混（little-endian：低位元組是 R）
+    const r = c & 255, g = (c >>> 8) & 255, b = (c >>> 16) & 255;
+    return 0xff000000 | (((b * (1 - k)) | 0) << 16) | (((g * (1 - k)) | 0) << 8) | ((r + (235 - r) * k) | 0);
+  }
   function lightAt(d, fog) { const v = 1.08 - d / fog; return v <= 0 ? 0 : v >= 1 ? 256 : (v * 256) | 0; }
 
   G.enemyFrame = function (e) {
@@ -43,6 +47,7 @@
     const S = G.S, P = S.P, half = H >> 1, dirX = Math.cos(P.a), dirY = Math.sin(P.a), plX = -dirY * PLANE, plY = dirX * PLANE;
     const fog = G.CONFIG.render.fog * (1 + S.light * 0.5), fT = G.TEX.tatami, cT = G.TEX.ceil;
     const rd0x = dirX - plX, rd0y = dirY - plY, rd1x = dirX + plX, rd1y = dirY + plY;
+    const lobs = S.lobs, nl = lobs.length;
     for (let y = half; y < H; y++) {
       const rowDist = half / (y - half + 0.5), sx = (rowDist * (rd1x - rd0x)) / W, sy = (rowDist * (rd1y - rd0y)) / W;
       let fx = P.x + rowDist * rd0x, fy = P.y + rowDist * rd0y;
@@ -50,6 +55,12 @@
       for (let x = 0; x < W; x++) {
         const ti = ((((fy * 64) | 0) & 63) << 6) | (((fx * 64) | 0) & 63);
         buf[rf + x] = shade(fT[ti], sh); buf[rc + x] = shade(cT[ti], (sh * 0.85) | 0);
+        if (nl) { // 地上的落點預告：外圈淡紅，內圈隨倒數擴大、越來越紅
+          for (let k = 0; k < nl; k++) {
+            const L = lobs[k], ddx = fx - L.x, ddy = fy - L.y, q = ddx * ddx + ddy * ddy;
+            if (q < L.r * L.r) { const p = 1 - L.t / L.t0, inner = q < L.r * L.r * p * p; buf[rf + x] = tint(buf[rf + x], inner ? 0.6 : 0.28); break; }
+          }
+        }
         fx += sx; fy += sy;
       }
     }
@@ -83,7 +94,7 @@
       else list.push({ x: it.x, y: it.y, t: G.SPR[it.kind], s: 1, l: 0 });
     }
     for (const d of S.decor) list.push({ kind: 'fire', x: d.x, y: d.y, t: G.SPR[((S.time * 6 + d.x) | 0) % 2 ? 'brazier1' : 'brazier0'], s: 1, l: 0, b: true });
-    for (const p of S.projs) list.push({ x: p.x, y: p.y, t: G.SPR[p.enemy ? 'bullet' : 'pbullet'], s: 0.22, l: 0.42, b: true });
+    for (const p of S.projs) list.push({ x: p.x, y: p.y, t: G.SPR[p.enemy ? p.spr || 'bullet' : 'pbullet'], s: 0.22, l: 0.42, b: true });
     for (const f of S.fx) list.push({ x: f.x, y: f.y, t: G.SPR[f.spr], s: f.s, l: f.l, b: f.b });
     for (const s of list) s.d = (s.x - P.x) ** 2 + (s.y - P.y) ** 2;
     list.sort((a, b) => b.d - a.d);
@@ -96,7 +107,7 @@
       if (x0 >= x1 || y0 >= y1) continue;
       if (s.e && !s.e.dead && (s.e.phase === 'windup' || s.e.phase === 'aim')) {
         const col = G.clamp(scrX | 0, 0, W - 1), e = s.e;
-        if (tY < zbuf[col]) G.marks.push({ x: scrX, y: top + sz * 0.02, p: (e.wind - e.phT) / e.wind, wind: e.wind, gun: e.T.kind === 'gun', shot: e.T.kind === 'shooter', dist: tY });
+        if (tY < zbuf[col]) G.marks.push({ x: scrX, y: top + sz * 0.02, p: (e.wind - e.phT) / e.wind, wind: e.wind, gun: e.T.kind === 'gun' || e.T.kind === 'lob', shot: e.T.kind === 'shooter', dist: tY });
       }
       const sh = s.b ? 256 : lightAt(tY, fog), k = 64 / sz, t = s.t;
       for (let x = x0; x < x1; x++) {

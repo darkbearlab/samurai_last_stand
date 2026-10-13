@@ -8,6 +8,7 @@
 | --- | --- | --- | --- |
 | [`nijo_gosho/`](nijo_gosho/) | 足利義輝 | 永祿之變（1565）・二條御所 | 原型 v0.1.0 |
 | [`nijo_gosho_gun/`](nijo_gosho_gun/) | 足利義輝（？） | 二條御所・銃（搞笑變體：全員熱兵器） | 原型，共用 `nijo_gosho/js` |
+| [`nijo_gosho_survivor/`](nijo_gosho_survivor/) | 足利義輝 | 二條御所・生存者（大量湧入、刀不會鈍） | 原型，共用 `nijo_gosho/js` |
 
 ## 執行
 

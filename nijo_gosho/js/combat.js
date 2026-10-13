@@ -109,7 +109,7 @@
       cands.push({ e, d, ang });
     }
     cands.sort((a, c) => a.d - c.d);
-    const maxT = p.issen ? 1 : p.zone === 'heavy' ? 6 : p.zone === 'sweet' && b.sweetCleave ? b.sweetCleave : 1;
+    const maxT = p.issen ? 1 : p.zone === 'sweet' && b.sweetCleave ? Math.max(b.sweetCleave, Z.cleave || 1) : Z.cleave || (p.zone === 'heavy' ? 6 : 1);
     let hits = 0, blocked = false;
     for (const c of cands) {
       if (hits >= maxT) break;
@@ -135,7 +135,7 @@
 
     if (hits > 0 && !b.infinite) {
       const before = P.sharp[b.id];
-      let w = p.issen ? 0 : b.wear[p.zone]; if (blocked) w += 2;
+      let w = p.issen || G.CONFIG.noWear ? 0 : b.wear[p.zone]; if (blocked && !G.CONFIG.noWear) w += 2;
       P.sharp[b.id] = Math.max(0, P.sharp[b.id] - w);
       if (p.zone === 'sweet' && b.restore === 'sweet' && !blocked) P.sharp[b.id] = Math.min(100, P.sharp[b.id] + b.sweetRestore);
       if (before > 0 && P.sharp[b.id] <= 0) { G.toast(G.TX('dull', `${b.name} 鈍了`, b)); G.sfx('dull'); }
@@ -181,7 +181,7 @@
     if (b.infinite) { G.toast(G.TX('needMeito', '需持名刀')); return; }
     if (P.sharp[b.id] <= 0) { G.toast(G.TX('isDull', '刀已鈍')); return; }
     if (P.act === 'swap') return;
-    P.ougi = 0; P.sharp[b.id] = 0; S.stats.ougi++;
+    P.ougi = 0; if (!G.CONFIG.noWear) P.sharp[b.id] = 0; S.stats.ougi++;
     let n = 0;
     for (const e of S.enemies) {
       if (e.dead) continue;

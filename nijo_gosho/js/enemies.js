@@ -6,7 +6,7 @@
   G.spawnEnemy = function (type, x, y, awake) {
     const T = G.CONFIG.enemies[type];
     const e = { type, T, x, y, hp: T.hp, shield: T.shield || 0, dead: false, awake: !!awake, phase: 'chase', phT: 0,
-      cd: G.rnd(0.5, 1.2), atkT: 0, painT: 0, poiseT: 0, wind: 1, wasPained: false, ph: Math.random() * 10, wob: 0, wt: 0, moving: false };
+      cd: G.rnd(0.5, 1.2), atkT: 0, painT: 0, touchCd: 0, poiseT: 0, wind: 1, wasPained: false, ph: Math.random() * 10, wob: 0, wt: 0, moving: false };
     G.S.enemies.push(e);
     return e;
   };
@@ -49,6 +49,23 @@
         if (e.phase === 'recover') { e.phT -= dt; if (e.phT <= 0) { e.phase = 'chase'; e.cd = G.rnd(T.cooldown[0], T.cooldown[1]) * slow; } continue; }
         if (see && d <= T.reach - 0.1 && e.cd <= 0) { e.phase = 'windup'; e.phT = e.wind = T.windup * slow; G.sfx('windup', d); continue; }
         if (see && d <= T.keep) continue;
+        moveToward(e, dt, see, d, T.speed);
+      } else if (T.kind === 'contact') {
+        // 碰到就扣血：不出招，只管往前擠
+        e.touchCd -= dt;
+        if (d < T.width + 0.38 && e.touchCd <= 0 && S.state === 'play') {
+          e.touchCd = T.touchCd || 0.9; e.atkT = 0.15;
+          G.hurtPlayer(G.rint(T.damage[0], T.damage[1]), false);
+          G.move(P, (dx / (d || 1)) * 0.25, (dy / (d || 1)) * 0.25, G.ps().radius);
+        }
+        moveToward(e, dt, see, d, T.speed);
+      } else if (T.kind === 'lob') {
+        // 鐵砲（生存者版）：在玩家腳下畫出落點預告，延遲後才落下
+        if (e.phase === 'aim') { e.phT -= dt; if (e.phT <= 0) { lob(e); e.phase = 'reload'; e.phT = T.reload; } continue; }
+        if (e.phase === 'reload') { e.phT -= dt; if (e.phT <= 0) { e.phase = 'chase'; e.cd = G.rnd(T.cooldown[0], T.cooldown[1]); } else if (d < 2.5) stepAway(e, dt, dx, dy, d, T.speed * 0.6); continue; }
+        if (see && d <= T.range && d >= 2 && e.cd <= 0) { e.phase = 'aim'; e.phT = e.wind = T.aim; G.sfx('aim', d); continue; }
+        if (see && d < T.keepMin) { stepAway(e, dt, dx, dy, d, T.speed); continue; }
+        if (see && d <= T.keepMax) continue;
         moveToward(e, dt, see, d, T.speed);
       } else if (T.kind === 'shooter') {
         // 射出看得見、躲得開的子彈；子彈可以用招架彈回去
@@ -143,7 +160,7 @@
     e.atkT = 0.2;
     const a = Math.atan2(P.y - e.y, P.x - e.x) + G.rnd(-T.spread || 0, T.spread || 0);
     S.projs.push({ x: e.x + Math.cos(a) * 0.35, y: e.y + Math.sin(a) * 0.35, vx: Math.cos(a) * T.projSpeed, vy: Math.sin(a) * T.projSpeed,
-      dmg: G.rint(T.damage[0], T.damage[1]), life: 5, enemy: true, src: e });
+      dmg: G.rint(T.damage[0], T.damage[1]), life: 5, enemy: true, src: e, spr: T.projSprite });
     G.sfx('eshot', distTo(e));
   }
 
@@ -171,6 +188,26 @@
         }
       }
       return true;
+    });
+  };
+
+  function lob(e) {
+    const S = G.S, P = S.P, T = e.T;
+    e.atkT = 0.2; G.sfx('gun', distTo(e));
+    G.addFx(e.x + (P.x - e.x) * 0.08, e.y + (P.y - e.y) * 0.08, 'smoke', 0.6, { s: 0.35, l: 0.45 });
+    S.lobs.push({ x: P.x + G.rnd(-0.3, 0.3), y: P.y + G.rnd(-0.3, 0.3), r: T.radius, t: T.delay, t0: T.delay, dmg: G.rint(T.damage[0], T.damage[1]) });
+  }
+  /* 落點：倒數結束時範圍內的人（包括敵人）都受傷 */
+  G.updateLobs = function (dt) {
+    const S = G.S, P = S.P;
+    S.lobs = S.lobs.filter((L) => {
+      L.t -= dt; if (L.t > 0) return true;
+      if (Math.hypot(P.x - L.x, P.y - L.y) < L.r) G.hurtPlayer(L.dmg, true);
+      for (const e of S.enemies) if (!e.dead && Math.hypot(e.x - L.x, e.y - L.y) < L.r) G.hitEnemy(e, L.dmg * 0.6, { stagger: 0.6, friendly: true });
+      G.sfx('shieldbreak', Math.hypot(P.x - L.x, P.y - L.y));
+      for (let i = 0; i < 3; i++) G.addFx(L.x + G.rnd(-0.4, 0.4), L.y + G.rnd(-0.4, 0.4), 'smoke', 0.5, { s: 0.4, l: 0.1 });
+      G.addFx(L.x, L.y, 'spark', 0.15, { b: true, l: 0.15, s: 0.5 });
+      return false;
     });
   };
 
