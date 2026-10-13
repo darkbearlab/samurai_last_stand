@@ -75,6 +75,28 @@
     drawBlade(ctx, H, x + bx, y + by, ang, b, { dull, glow });
   };
 
+  /* 敵人頭上的出手預告：內圈往外擴張，碰到外圈的瞬間就是出手。
+     金色帶是招架容許範圍，內圈進入金色帶時按招架即成功。紅色是鐵砲，不能招架，只能躲。 */
+  function drawMarks(w, h) {
+    const [GW, GH] = G.viewSize(), kx = w / GW, ky = h / GH, C = G.CONFIG.player;
+    for (const m of G.marks) {
+      const x = m.x * kx, y = m.y * ky - 10, R = G.clamp(46 / m.dist, 10, 22), r = R * Math.min(m.p, 1.6);
+      if (m.gun) {
+        uctx.strokeStyle = 'rgba(226,85,59,.9)'; uctx.lineWidth = 2;
+        uctx.beginPath(); uctx.arc(x, y, R, 0, Math.PI * 2); uctx.stroke();
+        uctx.fillStyle = 'rgba(226,85,59,.55)'; uctx.beginPath(); uctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2); uctx.fill();
+        continue;
+      }
+      const a = R * (1 - C.parryEarly / m.wind), b = R * (1 + C.parryLate / m.wind), inBand = r >= a && r <= b;
+      uctx.fillStyle = inBand ? 'rgba(255,214,120,.55)' : 'rgba(201,163,74,.28)';
+      uctx.beginPath(); uctx.arc(x, y, b, 0, Math.PI * 2); uctx.arc(x, y, a, 0, Math.PI * 2, true); uctx.fill();
+      uctx.strokeStyle = 'rgba(255,255,255,.85)'; uctx.lineWidth = 1.5;
+      uctx.beginPath(); uctx.arc(x, y, R, 0, Math.PI * 2); uctx.stroke();
+      uctx.strokeStyle = inBand ? '#ffe9b0' : 'rgba(255,255,255,.95)'; uctx.lineWidth = inBand ? 3 : 2;
+      uctx.beginPath(); uctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2); uctx.stroke();
+    }
+  }
+
   function zoneOf(b, c) { return c < b.sweet[0] ? 'light' : c <= b.sweet[1] ? 'sweet' : 'heavy'; }
   G.zoneOf = zoneOf;
 
@@ -94,6 +116,7 @@
     const cx = w / 2, cy = h / 2, R = Math.max(26, Math.min(w, h) * 0.065);
     const A0 = -Math.PI / 2, SPAN = Math.PI * 1.6, A = (t) => A0 + t * SPAN;
     const charging = P.act === 'charge';
+    drawMarks(w, h);
     // 準星
     uctx.fillStyle = 'rgba(255,240,210,.8)'; uctx.fillRect(cx - 1, cy - 1, 2, 2);
     // 軌道與最佳區間
@@ -119,6 +142,6 @@
       uctx.font = '900 20px "Noto Serif TC", serif'; uctx.textAlign = 'center'; uctx.textBaseline = 'middle';
       uctx.fillStyle = '#ffe9b0'; uctx.fillText('一閃', cx, cy - R - 22);
     }
-    if (P.parryT > 0) { uctx.strokeStyle = 'rgba(180,220,255,.8)'; uctx.lineWidth = 2; uctx.beginPath(); uctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); uctx.stroke(); }
+    if (S.time - P.lastParry < 0.2) { uctx.strokeStyle = 'rgba(180,220,255,.8)'; uctx.lineWidth = 2; uctx.beginPath(); uctx.arc(cx, cy, R * 0.55, 0, Math.PI * 2); uctx.stroke(); }
   };
 })();

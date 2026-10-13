@@ -8,7 +8,7 @@
   G.updateCombat = function (dt) {
     const S = G.S, P = S.P, C = G.CONFIG.player, IN = G.IN;
     let b = G.blade(P.cur);
-    P.parryCd -= dt; P.issenT -= dt; P.parryT -= dt; P.recoilT = Math.max(0, P.recoilT - dt); P.buffer -= dt;
+    P.parryCd -= dt; P.issenT -= dt; P.recoilT = Math.max(0, P.recoilT - dt); P.buffer -= dt;
 
     if (P.act === 'idle' || P.act === 'swap') {
       P.stDelay -= dt; if (P.stDelay <= 0) P.st = Math.min(C.maxStamina, P.st + C.staminaRegen * dt);
@@ -24,7 +24,7 @@
 
     if (IN.parryPressed && (P.act === 'idle' || P.act === 'charge') && P.parryCd <= 0) {
       if (P.st >= C.parryCost) {
-        P.act = 'parry'; P.actT = 0.32; P.parryT = C.parryWindow; P.parryCd = C.parryCooldown;
+        P.act = 'parry'; P.actT = 0.32; P.lastParry = S.time; P.parryCd = C.parryCooldown;
         P.st -= C.parryCost; P.stDelay = C.staminaDelay; G.sfx('swing_light');
       } else tired();
     }
@@ -123,7 +123,7 @@
         G.sfx('clang'); G.addFx(e.x + (P.x - e.x) * 0.2, e.y + (P.y - e.y) * 0.2, 'spark', 0.12, { b: true, l: 0.45 });
         blocked = true; hits++; break;
       }
-      const dmg = b.damage * mult * G.rnd(0.9, 1.1);
+      const dmg = b.damage * mult * G.rnd(0.95, 1.1);
       G.hitEnemy(e, dmg, { dull, knock: Z.knock || 0, stagger: dull ? 0.5 : Z.stagger });
       hits++;
     }

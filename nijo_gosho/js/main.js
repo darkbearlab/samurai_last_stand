@@ -12,7 +12,7 @@
       hp: C.player.maxHealth, st: C.player.maxStamina, stDelay: 0,
       owned: { wakizashi: true }, sharp: {}, cur: 'wakizashi',
       act: 'idle', actT: 0, charge: 0, pending: null, buffer: 0,
-      parryT: 0, parryCd: 0, issenT: 0, ougi: 0, recoilT: 0, hurtT: 0,
+      lastParry: -9, parryCd: 0, issenT: 0, ougi: 0, recoilT: 0, hurtT: 0,
       bob: 0, moveAmt: 0, fireNear: false,
       swingZone: 'light', swingDur: 0.2, swingTotal: 0.3, swingFrom: -1.9, swingIssen: false,
     };

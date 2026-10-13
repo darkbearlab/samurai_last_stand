@@ -6,11 +6,12 @@
   G.spawnEnemy = function (type, x, y, awake) {
     const T = G.CONFIG.enemies[type];
     const e = { type, T, x, y, hp: T.hp, shield: T.shield || 0, dead: false, awake: !!awake, phase: 'chase', phT: 0,
-      cd: G.rnd(0.5, 1.2), atkT: 0, painT: 0, ph: Math.random() * 10, wob: 0, wt: 0, moving: false };
+      cd: G.rnd(0.5, 1.2), atkT: 0, painT: 0, poiseT: 0, wind: 1, wasPained: false, ph: Math.random() * 10, wob: 0, wt: 0, moving: false };
     G.S.enemies.push(e);
     return e;
   };
 
+  function facingPlayer(e) { const P = G.S.P; return Math.abs(G.angDiff(Math.atan2(e.y - P.y, e.x - P.x), P.a)) < 1.1; }
   function distTo(e) { const P = G.S.P; return Math.hypot(P.x - e.x, P.y - e.y); }
 
   G.updateEnemies = function (dt) {
@@ -22,21 +23,33 @@
       e.atkT -= dt; e.painT -= dt; e.cd -= dt; e.moving = false;
       const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy);
       if (!e.awake) { if ((d < 14 && G.los(e.x, e.y, P.x, P.y)) || d < 4) e.awake = true; else continue; }
-      if (e.painT > 0 || S.state !== 'play') { if (e.phase !== 'reload') e.phase = 'chase'; continue; }
+      if (e.painT > 0 || S.state !== 'play') { if (e.phase !== 'reload') e.phase = 'chase'; e.wasPained = true; continue; }
+      if (e.wasPained) { e.wasPained = false; e.poiseT = G.CONFIG.poise; e.cd = Math.max(e.cd, G.CONFIG.staggerRecover); }
+      e.poiseT -= dt;
       const see = G.los(e.x, e.y, P.x, P.y);
       const awed = awe && T.name !== '門板兵' && d < pb.aweRadius;
       const slow = awed ? 1.4 : 1;
 
       if (T.kind === 'melee') {
-        if (e.phase === 'windup') { e.phT -= dt; if (e.phT <= 0) { strike(e, d); e.phase = 'recover'; e.phT = T.recover; } continue; }
+        if (e.phase === 'windup') {
+          e.phT -= dt;
+          const C = G.CONFIG.player;
+          if (e.phT <= 0) {
+            // 出手瞬間已到：在容許時間內按下招架即成功，否則過了 parryLate 就命中
+            const strikeAt = S.time + e.phT;
+            if (T.parryable && P.lastParry >= strikeAt - C.parryEarly && facingPlayer(e) && d <= T.reach + 0.35) { G.onParry(e); continue; }
+            if (e.phT <= -C.parryLate || !T.parryable) { strike(e, d); e.phase = 'recover'; e.phT = T.recover; }
+          }
+          continue;
+        }
         if (e.phase === 'recover') { e.phT -= dt; if (e.phT <= 0) { e.phase = 'chase'; e.cd = G.rnd(T.cooldown[0], T.cooldown[1]) * slow; } continue; }
-        if (see && d <= T.reach - 0.1 && e.cd <= 0) { e.phase = 'windup'; e.phT = T.windup * slow; G.sfx('windup', d); continue; }
+        if (see && d <= T.reach - 0.1 && e.cd <= 0) { e.phase = 'windup'; e.phT = e.wind = T.windup * slow; G.sfx('windup', d); continue; }
         if (see && d <= T.keep) continue;
         moveToward(e, dt, see, d, T.speed);
       } else if (T.kind === 'gun') {
         if (e.phase === 'aim') { e.phT -= dt; if (e.phT <= 0) { fire(e); e.phase = 'reload'; e.phT = T.reload; } continue; }
         if (e.phase === 'reload') { e.phT -= dt; if (e.phT <= 0) { e.phase = 'chase'; e.cd = G.rnd(T.cooldown[0], T.cooldown[1]); } else if (d < 2.5) stepAway(e, dt, dx, dy, d, T.speed * 0.6); continue; }
-        if (see && d <= T.range && d >= 1.8 && e.cd <= 0) { e.phase = 'aim'; e.phT = T.aim * slow; G.sfx('aim', d); continue; }
+        if (see && d <= T.range && d >= 1.8 && e.cd <= 0) { e.phase = 'aim'; e.phT = e.wind = T.aim * slow; G.sfx('aim', d); continue; }
         if (see && d < T.keepMin) { stepAway(e, dt, dx, dy, d, T.speed); continue; }
         if (see && d <= T.keepMax) continue;
         moveToward(e, dt, see, d, T.speed);
@@ -86,8 +99,6 @@
     const S = G.S, P = S.P, T = e.T;
     e.atkT = 0.2;
     if (d > T.reach + 0.35 || !G.los(e.x, e.y, P.x, P.y)) { G.sfx('whiff', d); return; }
-    const facing = Math.abs(G.angDiff(Math.atan2(e.y - P.y, e.x - P.x), P.a)) < 1.1;
-    if (P.parryT > 0 && facing && T.parryable) { G.onParry(e); return; }
     if (T.knock) { G.sfx('shove', d); G.move(P, ((P.x - e.x) / d) * T.knock, ((P.y - e.y) / d) * T.knock, G.CONFIG.player.radius); }
     G.hurtPlayer(G.rint(T.damage[0], T.damage[1]), false);
   }
@@ -123,8 +134,10 @@
     G.sfx('hit', distTo(e));
     e.awake = true;
     if (e.hp <= 0) { kill(e, staggered && !o.friendly); return { killed: true }; }
-    if (o.stagger >= 0.2 || Math.random() < 0.5) {
-      e.painT = Math.max(e.painT, o.stagger || 0.1);
+    // 每一刀都會打出硬直；剛恢復的短暫期間（poise）內，輕段不會再打斷
+    const st = o.stagger || 0.1;
+    if (!(e.poiseT > 0 && st < 0.5)) {
+      e.painT = Math.max(e.painT, st);
       if (e.phase === 'windup' || e.phase === 'aim') e.phase = 'chase';
     }
     if (o.knock) { const d = distTo(e) || 1; G.move(e, ((e.x - P.x) / d) * o.knock, ((e.y - P.y) / d) * o.knock, 0.25); }

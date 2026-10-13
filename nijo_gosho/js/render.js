@@ -21,6 +21,8 @@
     if (G.resizeUI) G.resizeUI();
   };
 
+  G.marks = [];
+  G.viewSize = () => [W, H];
   function shade(c, s) { return 0xff000000 | ((((c >>> 16) & 255) * s) >> 8 << 16) | ((((c >>> 8) & 255) * s) >> 8 << 8) | (((c & 255) * s) >> 8); }
   function lightAt(d, fog) { const v = 1.08 - d / fog; return v <= 0 ? 0 : v >= 1 ? 256 : (v * 256) | 0; }
 
@@ -66,10 +68,10 @@
       for (let y = y0; y < y1; y++) { buf[y * W + x] = shade(t[(((ty | 0) & 63) << 6) | tx], sh); ty += step; }
     }
 
-    const list = [];
+    const list = []; G.marks.length = 0;
     for (const e of S.enemies) {
       const fr = G.enemyFrame(e);
-      list.push({ kind: e.dead ? 0 : 'enemy', x: e.x, y: e.y, t: G.SPR[e.type][fr], s: e.T.scale, l: 0, b: !e.dead && (e.phase === 'windup' || e.phase === 'aim') && e.phT < 0.3 });
+      list.push({ kind: e.dead ? 0 : 'enemy', e, x: e.x, y: e.y, t: G.SPR[e.type][fr], s: e.T.scale, l: 0, b: !e.dead && (e.phase === 'windup' || e.phase === 'aim') && e.phT < 0.3 });
     }
     for (const it of S.items) {
       if (it.kind === 'blade') list.push({ x: it.x, y: it.y, t: G.SPR['blade_' + it.id], s: 0.95, l: Math.sin(S.time * 2 + it.x) * 0.02, b: true });
@@ -86,6 +88,10 @@
       const scrX = (W / 2) * (1 + tX / tY), full = H / tY, sz = full * s.s, bottom = half + full / 2 - s.l * full, top = bottom - sz, left = scrX - sz / 2;
       const x0 = Math.max(0, Math.ceil(left)), x1 = Math.min(W, Math.ceil(left + sz)), y0 = Math.max(0, Math.ceil(top)), y1 = Math.min(H, Math.ceil(bottom));
       if (x0 >= x1 || y0 >= y1) continue;
+      if (s.e && !s.e.dead && (s.e.phase === 'windup' || s.e.phase === 'aim')) {
+        const col = G.clamp(scrX | 0, 0, W - 1), e = s.e;
+        if (tY < zbuf[col]) G.marks.push({ x: scrX, y: top + sz * 0.02, p: (e.wind - e.phT) / e.wind, wind: e.wind, gun: e.T.kind === 'gun', dist: tY });
+      }
       const sh = s.b ? 256 : lightAt(tY, fog), k = 64 / sz, t = s.t;
       for (let x = x0; x < x1; x++) {
         if (tY >= zbuf[x]) continue;
