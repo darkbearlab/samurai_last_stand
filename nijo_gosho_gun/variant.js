@@ -29,7 +29,7 @@
   C.intro = {
     enemy: 'yari', dist: 2.4,
     lines: [
-      { at: 0.3, who: 'narr', text: 'It is Sunday in Kyoto', dur: 2.4 },
+      { at: 0.3, who: 'narr', text: 'Today is Sunday in Kyoto', dur: 2.4 },
       { at: 2.9, who: '長銃足輕', text: 'Huh?', dur: 1.2 },
       { at: 4.2, who: 'player', text: 'Shoot!', dur: 1.3 },
     ],
