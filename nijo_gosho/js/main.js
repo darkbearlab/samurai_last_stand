@@ -33,8 +33,27 @@
     const far = M.rooms.filter((r) => L.dist[r.i] >= 2);
     G.shuffle(far).slice(0, 3).forEach((r) => G.spawnEnemy('yari', r.x0 + G.rnd(1, 4), r.y0 + G.rnd(1, 4), false));
     G.buildFlow(); G.initHud(); G.updateHud(0); G.showJisei();
+    if (G.clearLines) G.clearLines();
+    if (C.intro) startIntro(C.intro);
     return S;
   };
+
+  /* 開場：面前站一個兵，台詞跑完之前他不會動 */
+  function startIntro(I) {
+    const S = G.S, P = S.P;
+    let best = P.a, bd = 0;
+    for (let k = 0; k < 24; k++) { const a = (k / 24) * Math.PI * 2, R = G.cast(P.x, P.y, Math.cos(a), Math.sin(a)); if (R.dist > bd) { bd = R.dist; best = a; } }
+    P.a = best;
+    if (I.enemy) {
+      const d = Math.min(I.dist || 2.4, bd - 0.6);
+      const e = G.spawnEnemy(I.enemy, P.x + Math.cos(best) * d, P.y + Math.sin(best) * d, true);
+      e.frozen = true; S.introEnemy = e;
+    }
+    let t = 0;
+    for (const l of I.lines) { setTimeout(() => { if (G.S === S) G.say(l.text, { who: l.who, dur: l.dur }); }, (l.at != null ? l.at : t) * 1000); t += l.dur || 1.6; }
+    S.introT = I.lines.reduce((m, l) => Math.max(m, (l.at || 0) + (l.dur || 1.6)), 0);
+    S.spawnT = Math.max(S.spawnT, S.introT + 2);
+  }
 
   function update(dt, realDt) {
     const S = G.S, P = S.P, C = G.ps(), IN = G.IN;
@@ -61,6 +80,7 @@
       P.moveAmt += (G.clamp(moved, 0, 1) - P.moveAmt) * Math.min(1, dt * 10); P.bob += dt * 9 * P.moveAmt;
     }
     if (dt <= 0) return;
+    if (S.introT > 0) { S.introT -= dt; if (S.introT <= 0 && S.introEnemy) { S.introEnemy.frozen = false; S.introEnemy.cd = 0.8; } }
     if (S.state === 'play') G.updateCombat(dt);
 
     S.light = Math.max(0, S.light - dt * 8); S.shake = Math.max(0, S.shake - dt * 2.5);

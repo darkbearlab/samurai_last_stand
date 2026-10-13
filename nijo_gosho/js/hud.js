@@ -4,6 +4,7 @@
   const G = window.G;
   const $ = G.$;
   let cache = {}, toastT = 0;
+  const lineQ = []; // 字幕佇列：換刀介紹、提示、開場台詞都走這裡
 
   G.initHud = function () {
     $('slots').innerHTML = G.CONFIG.blades.map((b, i) =>
@@ -36,7 +37,13 @@
       const k = 'sl' + bl.id, v = bl.infinite ? 100 : Math.round(P.sharp[bl.id] || 0);
       if (cache[k] !== v) { cache[k] = v; el.querySelector('i').style.width = v + '%'; }
     }
-    if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('show'); }
+    if (toastT > 0) {
+      toastT -= dt;
+      // 後面還有字幕排隊時，目前這句至少顯示 0.5 秒就換下一句
+      if (lineQ.length && toastT < lineQ.cur - 0.5) toastT = 0;
+      if (toastT <= 0) $('toast').classList.remove('show');
+    }
+    if (toastT <= 0 && lineQ.length) showLine(lineQ.shift());
   };
 
   /* 升級三選一：只抽已持有名刀的卡、未達疊加上限的卡 */
@@ -75,7 +82,19 @@
     if (S.jisei > 0) G.sfx('tome');
   };
 
-  G.toast = function (t) { const el = $('toast'); el.textContent = t; el.classList.add('show'); toastT = 1.6; };
+  /* 字幕管線：G.say(文字, { who, dur })
+     who：省略＝系統提示；'narr'＝旁白；'player'＝玩家；其他字串＝說話者名字（敵人） */
+  function showLine(l) {
+    const el = $('toast');
+    el.className = 'show' + (l.who ? ' say ' + (l.who === 'narr' || l.who === 'player' ? l.who : 'npc') : '');
+    el.innerHTML = '';
+    if (l.who && l.who !== 'narr') { const s = document.createElement('span'); s.className = 'who'; s.textContent = l.who === 'player' ? G.TX('playerName', '義輝') : l.who; el.append(s); }
+    el.append(document.createTextNode(l.text));
+    toastT = lineQ.cur = l.dur || 1.6;
+  }
+  G.say = function (text, o) { lineQ.push(Object.assign({ text }, o || {})); if (toastT <= 0) showLine(lineQ.shift()); };
+  G.toast = function (t) { G.say(t); };
+  G.clearLines = function () { lineQ.length = 0; toastT = 0; $('toast').classList.remove('show'); };
 
   const desk = `<dl class="keys">
     <dt>WASD</dt><dd>移動（Shift 奔跑）</dd>

@@ -21,6 +21,7 @@
     const awe = pb.restore === 'parry' && P.sharp[pb.id] > 0;
     for (const e of S.enemies) {
       if (e.dead) continue;
+      if (e.frozen) { e.moving = false; continue; }
       const T = e.T;
       e.atkT -= dt; e.painT -= dt; e.cd -= dt; e.moving = false;
       const dx = P.x - e.x, dy = P.y - e.y, d = Math.hypot(dx, dy);

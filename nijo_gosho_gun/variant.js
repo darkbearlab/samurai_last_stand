@@ -25,6 +25,16 @@
     whetstone: '火藥樽：名銃彈藥補充',
   };
 
+  /* ---------- 開場：走同一條字幕管線（G.say） ---------- */
+  C.intro = {
+    enemy: 'yari', dist: 2.4,
+    lines: [
+      { at: 0.3, who: 'narr', text: 'It is Sunday in Kyoto', dur: 2.4 },
+      { at: 2.9, who: '長銃足輕', text: 'Huh?', dur: 1.2 },
+      { at: 4.2, who: 'player', text: 'Shoot!', dur: 1.3 },
+    ],
+  };
+
   /* ---------- 名銃：個性同本篇，距離與角度改成槍 ---------- */
   const B = Object.fromEntries(C.blades.map((b) => [b.id, b]));
   Object.assign(B.wakizashi, { name: '短筒', mark: '短', role: '打不完的備用短槍', reach: 9, arc: 0.1,
