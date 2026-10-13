@@ -9,6 +9,10 @@
   G.initRender = function () {
     view = G.$('view'); cv = G.$('cv'); ctx = cv.getContext('2d');
     G.resize(); addEventListener('resize', G.resize);
+    // iOS 轉向時尺寸會晚一點才穩定，多量幾次
+    const late = () => { G.resize(); setTimeout(G.resize, 150); setTimeout(G.resize, 500); };
+    addEventListener('orientationchange', late);
+    if (window.visualViewport) visualViewport.addEventListener('resize', G.resize);
   };
   G.resize = function () {
     H = G.CONFIG.render.height;

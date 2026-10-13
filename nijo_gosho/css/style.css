@@ -7,8 +7,9 @@
   color-scheme: dark;
 }
 * { box-sizing: border-box; }
-html, body { height: 100%; margin: 0; background: var(--urushi); color: var(--washi); font-family: var(--f-sans); overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
-#app { height: 100%; display: flex; flex-direction: column; padding-top: env(safe-area-inset-top, 0px); }
+html, body { position: fixed; inset: 0; width: 100%; height: 100%; margin: 0; background: var(--urushi); color: var(--washi); font-family: var(--f-sans); overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+/* 鎖死在視窗上：iOS 轉橫向時不會殘留舊尺寸或出現空白 */
+#app { position: fixed; inset: 0; display: flex; flex-direction: column; padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) 0 env(safe-area-inset-left, 0px); }
 #view { flex: 1; position: relative; min-height: 0; background: #000; }
 #cv, #ui { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
 #cv { image-rendering: pixelated; image-rendering: crisp-edges; }
@@ -48,9 +49,9 @@ html, body { height: 100%; margin: 0; background: var(--urushi); color: var(--wa
 #ougiCell.ready .track.og { box-shadow: 0 0 6px var(--kin); }
 .stat b { font-size: 18px; font-variant-numeric: tabular-nums; font-family: var(--f-serif); }
 
-#screen { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; background: rgba(8,6,5,.78); padding-inline: 16px; overflow-y: auto; }
+#screen { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center; background: rgba(8,6,5,.78); padding-inline: 16px; overflow-y: auto; }
 #screen[hidden] { display: none; }
-.panel { width: min(560px, 100%); margin-block: 16px; background: var(--sumi); border: 1px solid var(--line); border-top: 3px solid var(--shu); padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 12px; }
+.panel { width: min(560px, 100%); margin-block: auto; /* 比畫面高時從頂端開始捲，不會被裁掉 */ background: var(--sumi); border: 1px solid var(--line); border-top: 3px solid var(--shu); padding: 22px 22px 20px; display: flex; flex-direction: column; gap: 12px; }
 .eyebrow { font-family: var(--f-serif); font-size: 12px; color: var(--kin); letter-spacing: .2em; }
 .panel h1 { margin: 0; font-family: var(--f-serif); font-weight: 900; font-size: clamp(34px, 8vw, 52px); letter-spacing: .25em; line-height: 1.1; }
 .panel p { margin: 0; color: var(--dim); font-size: 14px; line-height: 1.7; max-width: 62ch; }
@@ -115,5 +116,15 @@ html, body { height: 100%; margin: 0; background: var(--urushi); color: var(--wa
   .slot { width: 22px; height: 26px; } .slot .m { font-size: 12px; } .slot .k { display: none; }
   #ougiCell .lbl { font-size: 10px; letter-spacing: 0; }
   .stat b { font-size: 14px; }
+}
+/* 橫拿手機：開始畫面精簡 */
+@media (max-height: 480px) {
+  #screen { padding-block: 10px; }
+  .panel { margin-block: auto; padding: 14px 18px; gap: 8px; width: min(720px, 100%); }
+  .panel h1 { font-size: 30px; }
+  .panel p { font-size: 13px; line-height: 1.55; }
+  .panel .rules { display: none; }
+  .panel .hint { display: none; }
+  .keys { grid-template-columns: auto 1fr auto 1fr; font-size: 12px; }
 }
 @media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
