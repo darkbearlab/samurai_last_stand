@@ -28,6 +28,17 @@
   G.marks = [];
   G.viewSize = () => [W, H];
   function shade(c, s) { return 0xff000000 | ((((c >>> 16) & 255) * s) >> 8 << 16) | ((((c >>> 8) & 255) * s) >> 8 << 8) | (((c & 255) * s) >> 8); }
+  const avgCache = new Map();
+  function avgOf(t) {
+    let v = avgCache.get(t); if (v !== undefined) return v;
+    let r = 0, g = 0, b = 0; for (const c of t) { r += c & 255; g += (c >>> 8) & 255; b += (c >>> 16) & 255; }
+    const n = t.length; v = 0xff000000 | (((b / n) | 0) << 16) | (((g / n) | 0) << 8) | ((r / n) | 0);
+    avgCache.set(t, v); return v;
+  }
+  function mix(a, b, k) {
+    const ra = a & 255, ga = (a >>> 8) & 255, ba = (a >>> 16) & 255, rb = b & 255, gb = (b >>> 8) & 255, bb = (b >>> 16) & 255;
+    return 0xff000000 | (((ba + (bb - ba) * k) | 0) << 16) | (((ga + (gb - ga) * k) | 0) << 8) | ((ra + (rb - ra) * k) | 0);
+  }
   function tint(c, k) { // 往紅色混（little-endian：低位元組是 R）
     const r = c & 255, g = (c >>> 8) & 255, b = (c >>> 16) & 255;
     return 0xff000000 | (((b * (1 - k)) | 0) << 16) | (((g * (1 - k)) | 0) << 8) | ((r + (235 - r) * k) | 0);
@@ -48,13 +59,18 @@
     const fog = G.CONFIG.render.fog * (1 + S.light * 0.5), fT = G.TEX.tatami, cT = G.TEX.ceil;
     const rd0x = dirX - plX, rd0y = dirY - plY, rd1x = dirX + plX, rd1y = dirY + plY;
     const lobs = S.lobs, nl = lobs.length;
+    // 遠處的地板與天花板改用平均色：避免紋理在遠處取樣時閃爍、扭曲
+    const fAvg = avgOf(fT), cAvg = avgOf(cT);
     for (let y = half; y < H; y++) {
       const rowDist = half / (y - half + 0.5), sx = (rowDist * (rd1x - rd0x)) / W, sy = (rowDist * (rd1y - rd0y)) / W;
       let fx = P.x + rowDist * rd0x, fy = P.y + rowDist * rd0y;
       const sh = lightAt(rowDist, fog), rf = y * W, rc = (H - 1 - y) * W;
+      const far = G.clamp((rowDist - 2.5) / 2.5, 0, 1), fFar = shade(fAvg, sh), cFar = shade(cAvg, (sh * 0.85) | 0);
       for (let x = 0; x < W; x++) {
         const ti = ((((fy * 64) | 0) & 63) << 6) | (((fx * 64) | 0) & 63);
-        buf[rf + x] = shade(fT[ti], sh); buf[rc + x] = shade(cT[ti], (sh * 0.85) | 0);
+        if (far >= 1) { buf[rf + x] = fFar; buf[rc + x] = cFar; }
+        else if (far > 0) { buf[rf + x] = mix(shade(fT[ti], sh), fFar, far); buf[rc + x] = mix(shade(cT[ti], (sh * 0.85) | 0), cFar, far); }
+        else { buf[rf + x] = shade(fT[ti], sh); buf[rc + x] = shade(cT[ti], (sh * 0.85) | 0); }
         if (nl) { // 地上的落點預告：外圈淡紅，內圈隨倒數擴大、越來越紅
           for (let k = 0; k < nl; k++) {
             const L = lobs[k], ddx = fx - L.x, ddy = fy - L.y, q = ddx * ddx + ddy * ddy;

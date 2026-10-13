@@ -85,11 +85,11 @@
       g.fillStyle = '#2a1c14'; g.fillRect(0, 0, 3, 64); g.fillRect(61, 0, 3, 64);
       grain(g, 10, r);
     },
-    tatami(g, r) {
-      for (let y = 0; y < 64; y += 2) { const v = r() * 16 - 8; g.fillStyle = `rgb(${150 + v},${146 + v},${92 + v * 0.5})`; g.fillRect(0, y, 64, 2); }
-      g.fillStyle = 'rgba(80,70,40,.35)'; for (let y = 1; y < 64; y += 2) g.fillRect(0, y, 64, 1);
-      g.fillStyle = '#1d1f1a'; g.fillRect(0, 0, 64, 4); g.fillStyle = '#3b4a35'; g.fillRect(0, 1, 64, 1);
-      grain(g, 10, r);
+    tatami(g, r) { // 避免細密的條紋：遠處取樣會產生摩爾紋，看起來像空間扭曲
+      g.fillStyle = '#958f5c'; g.fillRect(0, 0, 64, 64);
+      for (let y = 4; y < 64; y += 8) { const v = r() * 8 - 4; g.fillStyle = `rgba(${120 + v},${116 + v},${70},.18)`; g.fillRect(0, y, 64, 4); }
+      g.fillStyle = '#2a2c24'; g.fillRect(0, 0, 64, 4);
+      grain(g, 6, r);
     },
     ceil(g, r) {
       for (let x = 0; x < 64; x += 16) { const v = r() * 14; g.fillStyle = `rgb(${50 + v},${36 + v * 0.7},${26 + v * 0.5})`; g.fillRect(x, 0, 16, 64); }

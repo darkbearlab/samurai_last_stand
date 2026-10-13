@@ -99,7 +99,10 @@
   }
 
   /* ---------- 狀態 ---------- */
-  let round = 1;
+  // 入口參數：?mode=survival 為勝ち抜き（生命延續，每勝只回一點）
+  const MODE = new URLSearchParams(location.search).get('mode') === 'survival' ? 'survival' : 'normal';
+  const SURV = { healPerWin: 15 };
+  let round = 1, carryHp = null;
   function newBout(r) {
     round = r;
     const A = buildArena(), k = r - 1;
@@ -112,7 +115,8 @@
     const foe = { type: 'samurai', T: { scale: 1.0, width: 0.4 }, F, name: `${FOES[(r - 1) % FOES.length]}${NAMES[(r * 3) % NAMES.length]}`,
       x: 6.5, y: 3.4, hp: F.hp, pos: 0, state: 'idle', t: 0, dir: null, frame: 'idle', guard: null, guardT: 0, parryNext: false,
       dodgeT: 0, dodgeDir: 1, cd: 1.2, lastHit: -9, swingT: 0, strafe: Math.random() < 0.5 ? 1 : -1, dead: false, ph: 0, phase: '' };
-    const P = { x: 6.5, y: 9.6, a: -Math.PI / 2, hp: D.player.hp, pos: 0, hurtT: 0, bob: 0, moveAmt: 0, stun: 0, lastHit: -9,
+    const startHp = MODE === 'survival' && carryHp != null ? Math.min(D.player.hp, carryHp + SURV.healPerWin) : D.player.hp;
+    const P = { x: 6.5, y: 9.6, a: -Math.PI / 2, hp: startHp, pos: 0, hurtT: 0, bob: 0, moveAmt: 0, stun: 0, lastHit: -9,
       atk: null, aimHold: 0, guard: null, parryFlash: 0 };
     G.S = { W: A.N, H: A.N, grid: A.grid, doors: new Map(), wallHp: new Float32Array(A.N * A.N),
       decor: [{ x: 2.5, y: 2.5, solid: true }, { x: 10.5, y: 2.5, solid: true }, { x: 2.5, y: 10.5, solid: true }, { x: 10.5, y: 10.5, solid: true }],
@@ -430,7 +434,7 @@
     // 對手的名字、生命、架勢
     const bw = Math.min(260, w * 0.5), bx0 = cx - bw / 2;
     ug.fillStyle = '#e8e0cc'; ug.font = '900 16px "Noto Serif TC", serif'; ug.textAlign = 'center'; ug.textBaseline = 'alphabetic';
-    ug.fillText(`第 ${round} 試合　${F.name}`, cx, 28);
+    ug.fillText(`${MODE === 'survival' ? '勝ち抜き ' : ''}第 ${round} 試合　${F.name}`, cx, 28);
     bar(bx0, 36, bw, 7, F.hp / F.F.hp, '#c8402c'); bar(bx0, 46, bw, 4, F.pos / F.F.posMax, '#c9a34a');
     // 自己
     const pw = Math.min(200, w * 0.35);
@@ -446,19 +450,19 @@
       ? `<dl class="keys"><dt>左半邊</dt><dd>拖曳移動（永遠面向對手）</dd><dt>攻</dt><dd>按住往左／右拖曳就位，放開揮出；在中間按住不動是刺擊</dd><dt>守</dt><dd>對手出手前按住，推向攻擊來的方向；時機好是格擋</dd></dl>`
       : `<dl class="keys"><dt>WASD</dt><dd>移動（永遠面向對手）</dd><dt>左鍵按住</dt><dd>攻：按住時滑鼠往左／右移動就位，放開揮出；不動按住是刺擊</dd><dt>右鍵按住</dt><dd>守：按住時滑鼠推向攻擊來的方向；時機好是格擋</dd><dt>Esc</dt><dd>暫停</dd></dl>`;
     const html = {
-      start: `<div class="eyebrow">試作 · 鎖定式一對一</div><h1>御前比武</h1>
-        <p class="lead">在將軍面前，一對一。看清對手的刀從哪一邊來。</p>
+      start: `<div class="eyebrow">試作 · 鎖定式一對一${MODE === 'survival' ? ' · 勝ち抜き' : ''}</div><h1>御前比武</h1>
+        <p class="lead">在將軍面前，一對一。看清對手的刀從哪一邊來。${MODE === 'survival' ? `<br>勝ち抜き：生命不會回滿，每贏一場只回復 ${SURV.healPerWin}。能連勝幾人？` : ''}</p>
         <div class="rules"><p>對手出手前，畫面左右會亮起箭頭：從那一側砍來。這時按住「守」推向同一側，剛推到就被砍中是<b>格擋</b>（對手硬直），推得太早只是防禦（扣架勢）。中央的紅圈與「突」是刺擊，擋不住，只能橫移閃開。</p>
         <p>雙方都有架勢條，被擋、被格擋、挨打都會累積；滿了就崩，崩的時候吃的傷害更重。</p></div>
         ${ctl}<div class="row"><button class="btn" id="go" type="button">開始</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
-      won: `<div class="eyebrow">第 ${round} 試合</div><h1>勝</h1><p class="lead">下一位對手會更快、更會擋。</p><div class="row"><button class="btn" id="go" type="button">下一試合</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
-      dead: `<div class="eyebrow">第 ${round} 試合</div><h1>敗</h1><div class="row"><button class="btn" id="go" type="button">從頭再來</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
+      won: `<div class="eyebrow">第 ${round} 試合</div><h1>勝</h1><p class="lead">下一位對手會更快、更會擋。${MODE === 'survival' ? `生命 ${Math.ceil(G.S.P.hp)}，下一試合開始時回復 ${SURV.healPerWin}。` : ''}</p><div class="row"><button class="btn" id="go" type="button">下一試合</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
+      dead: `<div class="eyebrow">第 ${round} 試合</div><h1>敗</h1>${MODE === 'survival' ? `<p class="lead">勝ち抜き ${round - 1} 人。</p>` : ''}<div class="row"><button class="btn" id="go" type="button">從頭再來</button><a class="back" href="../index.html">← 選擇人物</a></div>`,
       pause: `<div class="eyebrow">暫停</div><h1>一息</h1><div class="row"><button class="btn" id="go" type="button">繼續</button></div>`,
     }[kind];
     $('panel').innerHTML = html;
     $('go').addEventListener('click', () => {
       G.initAudio();
-      if (kind === 'won') newBout(round + 1); else if (kind === 'dead' || kind === 'start') newBout(kind === 'start' ? 1 : 1);
+      if (kind === 'won') { carryHp = G.S.P.hp; newBout(round + 1); } else if (kind === 'dead' || kind === 'start') { carryHp = null; newBout(1); }
       if (kind === 'pause') G.S.paused = false;
       screenShown = false; $('screen').hidden = true;
       if (!isTouch) { try { const p = $('cv').requestPointerLock(); if (p && p.catch) p.catch(() => {}); } catch (e) { /* 忽略 */ } }
