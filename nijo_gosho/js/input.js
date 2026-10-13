@@ -78,9 +78,15 @@
     const hold = (id, down, up) => {
       const el = G.$(id);
       el.addEventListener('pointerdown', (e) => { e.preventDefault(); el.classList.add('on'); down(); });
-      ['pointerup', 'pointercancel', 'pointerleave'].forEach((ev) => el.addEventListener(ev, () => { if (!el.classList.contains('on')) return; el.classList.remove('on'); if (up) up(); }));
+      (id === 'tAtk' ? ['pointerup', 'pointercancel'] : ['pointerup', 'pointercancel', 'pointerleave']).forEach((ev) => el.addEventListener(ev, () => { if (!el.classList.contains('on')) return; el.classList.remove('on'); if (up) up(); }));
     };
     hold('tAtk', atkDown, atkUp);
+    // 按住「斬」時可以直接左右拖曳轉向，不必放開再重新瞄準
+    const atkBtn = G.$('tAtk'); let atkPid = null, atkX = 0;
+    atkBtn.addEventListener('pointerdown', (e) => { atkPid = e.pointerId; atkX = e.clientX; try { atkBtn.setPointerCapture(e.pointerId); } catch (err) { /* 不支援時仍可蓄力 */ } });
+    atkBtn.addEventListener('pointermove', (e) => { if (e.pointerId !== atkPid) return; IN.touchDX += e.clientX - atkX; atkX = e.clientX; });
+    const atkEnd = (e) => { if (e.pointerId === atkPid) atkPid = null; };
+    atkBtn.addEventListener('pointerup', atkEnd); atkBtn.addEventListener('pointercancel', atkEnd);
     hold('tParry', () => (IN.parryPressed = true));
     hold('tSwap', () => (IN.swapNext = 1));
     hold('tOugi', () => (IN.ougiPressed = true));

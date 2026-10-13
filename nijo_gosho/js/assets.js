@@ -69,6 +69,16 @@
       g.fillRect(62, 0, 2, 48);
       g.fillStyle = '#5a4130'; g.fillRect(0, 48, 64, 16); g.fillStyle = '#4a3424'; g.fillRect(0, 48, 64, 2);
     },
+    shojiDoor(g, r) { // 腰付障子の引き戸：看得到對面的影子
+      g.fillStyle = '#ece6d6'; g.fillRect(0, 0, 64, 64);
+      grain(g, 8, r);
+      g.fillStyle = '#6b4e36';
+      for (const x of [16, 32, 48]) g.fillRect(x, 0, 1, 46);
+      for (let y = 12; y < 46; y += 11) g.fillRect(0, y, 64, 1);
+      g.fillStyle = '#3e2a1c'; g.fillRect(0, 0, 64, 3); g.fillRect(0, 0, 3, 64); g.fillRect(61, 0, 3, 64);
+      g.fillStyle = '#5a4130'; g.fillRect(0, 46, 64, 18); g.fillStyle = '#3e2a1c'; g.fillRect(0, 46, 64, 2);
+      g.fillStyle = '#2a1c14'; g.fillRect(53, 52, 3, 8);
+    },
     pillar(g, r) {
       g.fillStyle = '#5a3f2c'; g.fillRect(0, 0, 64, 64);
       for (let x = 0; x < 64; x++) { const v = Math.sin(x * 0.55) + r() * 0.6; g.fillStyle = `rgba(30,18,10,${v > 0.9 ? 0.32 : 0.12})`; g.fillRect(x, 0, 1, 64); }
@@ -272,5 +282,5 @@
     for (const k in ITEMGEN) SPR[k] = makeTex((g, r) => ITEMGEN[k](g, r), seed++);
   };
 
-  G.WALLTEX = { W: 'plaster', K: 'fusuma', S: 'shoji', D: 'door', P: 'pillar' };
+  G.WALLTEX = { W: 'plaster', K: 'fusuma', S: 'shoji', D: 'door', J: 'shojiDoor', P: 'pillar' };
 })();

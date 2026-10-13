@@ -23,7 +23,7 @@
       flow: null, flowT: 0, spawnT: C.director.grace, light: 0, shake: 0, hitStop: 0, ougiFlash: 0, pickT: 0, deadT: 0,
       stats: { parry: 0, issen: 0, tome: 0, ougi: 0 },
     });
-    for (let i = 0; i < M.grid.length; i++) if (M.grid[i] === 'D') S.doors.set(i, { o: 0, st: 0, hold: 0 });
+    for (let i = 0; i < M.grid.length; i++) if (G.isDoor(M.grid[i])) S.doors.set(i, { o: 0, st: 0, hold: 0 });
     // 開局：幾名足輕已在遠處房間徘徊
     const far = M.rooms.filter((r) => L.dist[r.i] >= 2);
     G.shuffle(far).slice(0, 3).forEach((r) => G.spawnEnemy('yari', r.x0 + G.rnd(1, 4), r.y0 + G.rnd(1, 4), false));

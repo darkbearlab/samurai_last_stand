@@ -3,12 +3,14 @@
   'use strict';
   const G = window.G;
 
+  G.isDoor = (c) => c === 'D' || c === 'J';
+  G.isPaper = (c) => c === 'S' || c === 'J'; // 紙糊的：會透出對面的影子
   G.cell = function (x, y) { const S = G.S; if (x < 0 || y < 0 || x >= S.W || y >= S.H) return 'W'; return S.grid[y * S.W + x]; };
   G.doorOpen = function (x, y) { const d = G.S.doors.get(y * G.S.W + x); return d ? d.o : 0; };
   G.solidAt = function (x, y) {
     const cx = Math.floor(x), cy = Math.floor(y), c = G.cell(cx, cy);
     if (!c) return false;
-    if (c === 'D') return G.doorOpen(cx, cy) < 0.9;
+    if (G.isDoor(c)) return G.doorOpen(cx, cy) < 0.9;
     return true;
   };
   G.blocked = function (x, y, r) {
@@ -24,26 +26,28 @@
     const dx = x1 - x0, dy = y1 - y0, n = Math.ceil(Math.hypot(dx, dy) / 0.2);
     for (let i = 1; i < n; i++) {
       const x = Math.floor(x0 + (dx * i) / n), y = Math.floor(y0 + (dy * i) / n), c = G.cell(x, y);
-      if (c && !(c === 'D' && G.doorOpen(x, y) > 0.8)) return false;
+      if (c && !(G.isDoor(c) && G.doorOpen(x, y) > 0.8)) return false;
     }
     return true;
   };
 
-  const RAY = (G.RAY = { c: 0, dist: 64, side: 0, u: 0, mx: 0, my: 0 });
-  G.cast = function (px, py, rdx, rdy) {
+  const RAY = (G.RAY = { c: 0, dist: 64, side: 0, u: 0, mx: 0, my: 0, pc: 0, pd: 0, pu: 0, pside: 0 });
+  /* seePaper：碰到紙牆時先記下（pc/pd/pu），再繼續找後面的實牆 */
+  G.cast = function (px, py, rdx, rdy, seePaper) {
     let mx = px | 0, my = py | 0;
     const ddx = rdx === 0 ? 1e30 : Math.abs(1 / rdx), ddy = rdy === 0 ? 1e30 : Math.abs(1 / rdy);
     let stx, sty, sdx, sdy;
     if (rdx < 0) { stx = -1; sdx = (px - mx) * ddx; } else { stx = 1; sdx = (mx + 1 - px) * ddx; }
     if (rdy < 0) { sty = -1; sdy = (py - my) * ddy; } else { sty = 1; sdy = (my + 1 - py) * ddy; }
-    RAY.c = 0; RAY.dist = 64;
+    RAY.c = 0; RAY.dist = 64; RAY.pc = 0;
     for (let i = 0; i < 128; i++) {
       let side;
       if (sdx < sdy) { sdx += ddx; mx += stx; side = 0; } else { sdy += ddy; my += sty; side = 1; }
       const c = G.cell(mx, my); if (!c) continue;
       const d = side === 0 ? sdx - ddx : sdy - ddy;
       let u = side === 0 ? py + d * rdy : px + d * rdx; u -= Math.floor(u);
-      if (c === 'D') { const o = G.doorOpen(mx, my); if (u < o) continue; u -= o; }
+      if (G.isDoor(c)) { const o = G.doorOpen(mx, my); if (u < o) continue; u -= o; }
+      if (seePaper && !RAY.pc && G.isPaper(c)) { RAY.pc = c; RAY.pd = d; RAY.pu = u; RAY.pside = side; continue; }
       RAY.c = c; RAY.dist = d; RAY.side = side; RAY.u = u; RAY.mx = mx; RAY.my = my;
       return RAY;
     }
@@ -79,7 +83,7 @@
       for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
         const nx = cx + dx, ny = cy + dy; if (nx < 0 || ny < 0 || nx >= S.W || ny >= S.H) continue;
         const k = ny * S.W + nx; if (D[k] >= 0) continue;
-        const ch = S.grid[k]; if (ch && ch !== 'D') continue;
+        const ch = S.grid[k]; if (ch && !G.isDoor(ch)) continue;
         D[k] = D[c] + 1; q.push(k);
       }
     }

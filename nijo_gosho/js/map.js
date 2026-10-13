@@ -44,7 +44,7 @@
       let dx, dy;
       if (A.ry === B.ry) { dx = Math.max(A.rx, B.rx) * P; dy = A.ry * P + 1 + off; }
       else { dy = Math.max(A.ry, B.ry) * P; dx = A.rx * P + 1 + off; }
-      grid[at(dx, dy)] = 'D';
+      grid[at(dx, dy)] = r() < C.paperDoorChance ? 'J' : 'D'; // J：障子戸，看得到對面的影子
     }
     return { W, H, grid, rooms, N, RS, P, r, seed };
   };
@@ -79,6 +79,10 @@
     G.shuffle(rooms.filter((x) => x !== start).slice(), r).slice(0, C.whetstones).forEach((room) => {
       const ox = r() < 0.5 ? 1 : RS - 2, oy = r() < 0.5 ? 1 : RS - 2;
       items.push({ kind: 'whetstone', x: room.x0 + ox + 0.5, y: room.y0 + oy + 0.5 });
+    });
+
+    G.shuffle(rooms.filter((x) => x !== start).slice(), r).slice(0, C.onigiri || 0).forEach((room) => {
+      items.push({ kind: 'onigiri', x: room.x0 + 1.5 + Math.floor(r() * (RS - 2)), y: room.y0 + (r() < 0.5 ? 0.5 : RS - 0.5) });
     });
 
     const spawnPts = [];

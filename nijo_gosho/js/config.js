@@ -22,7 +22,7 @@
       parryCost: 14, parryWindow: 0.24, parryCooldown: 0.4,
       issenWindow: 0.9, issenMult: 3,
       swapTime: 0.3,
-      tomeHeal: 6,         // 對硬直中的敵人補上致命一刀時回血（暫定）
+      tomeHeal: 10,        // 對硬直中的敵人補上致命一刀時回血（暫定）
       inputBuffer: 0.18,
     },
 
@@ -77,7 +77,7 @@
 
     pickups: {
       whetstone: { name: '砥石', main: 40, other: 15 },
-      onigiri: { name: '握り飯', heal: 15 },
+      onigiri: { name: '握り飯', heal: 20 },
     },
 
     director: {
@@ -88,12 +88,12 @@
         { t: 40, w: { yari: 0.65, teppo: 0.35 } },
         { t: 80, w: { yari: 0.5, teppo: 0.25, tate: 0.25 } },
       ],
-      dropWhetstone: 0.18, dropOnigiri: 0.08,
+      dropWhetstone: 0.3, dropOnigiri: 0.2,
     },
 
     ougi: { max: 100, sweetGain: 8, parryGain: 18, issenGain: 12, range: 9 },
 
-    map: { rooms: 4, roomSize: 5, shojiChance: 0.2, extraDoorChance: 0.25, braziers: 4, whetstones: 5 },
+    map: { rooms: 4, roomSize: 5, shojiChance: 0.2, paperDoorChance: 0.45, extraDoorChance: 0.25, braziers: 4, whetstones: 7, onigiri: 4 },
   };
 
   G.blade = (id) => G.CONFIG.blades.find((b) => b.id === id);

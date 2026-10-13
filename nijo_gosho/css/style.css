@@ -73,10 +73,15 @@ html, body { height: 100%; margin: 0; background: var(--urushi); color: var(--wa
 #knob { position: absolute; width: 56px; height: 56px; margin: -28px 0 0 -28px; border-radius: 50%; border: 2px solid rgba(201,163,74,.6); background: rgba(201,163,74,.12); pointer-events: none; }
 .tbtn { position: absolute; border-radius: 50%; border: 2px solid rgba(232,224,204,.35); background: rgba(26,21,19,.55); color: var(--washi); font-family: var(--f-serif); font-weight: 900; font-size: 16px; display: flex; align-items: center; justify-content: center; touch-action: none; padding: 0; }
 .tbtn.on { background: rgba(200,64,44,.45); }
-#tAtk { right: 18px; bottom: 20px; width: 86px; height: 86px; font-size: 22px; border-color: rgba(200,64,44,.8); }
-#tParry { right: 116px; bottom: 18px; width: 62px; height: 62px; }
-#tSwap { right: 30px; bottom: 120px; width: 50px; height: 50px; font-size: 14px; }
-#tOugi { right: 96px; bottom: 96px; width: 50px; height: 50px; font-size: 14px; border-color: rgba(201,163,74,.7); }
+/* 按鈕整組往上，避開手機底部的系統手勢區與拇指根部 */
+#tAtk { right: 22px; bottom: 34%; width: 86px; height: 86px; font-size: 22px; border-color: rgba(200,64,44,.8); }
+#tParry { right: 122px; bottom: calc(34% - 6px); width: 62px; height: 62px; }
+#tSwap { right: 36px; bottom: calc(34% + 100px); width: 50px; height: 50px; font-size: 14px; }
+#tOugi { right: 104px; bottom: calc(34% + 76px); width: 50px; height: 50px; font-size: 14px; border-color: rgba(201,163,74,.7); }
+@media (max-height: 420px) {
+  #tAtk { bottom: 22%; } #tParry { bottom: calc(22% - 6px); }
+  #tSwap { bottom: calc(22% + 96px); } #tOugi { bottom: calc(22% + 72px); }
+}
 
 @media (max-width: 720px) {
   .track { width: 80px; } .track.og { width: 70px; }
