@@ -215,7 +215,8 @@
     if (set === 'tateless') line(g, 46, 62, 60, 60, 1.4, COL.steel);
     if (set === 'tate') { g.fillStyle = '#6f5034'; g.fillRect(12, 52, 48, 9); g.fillStyle = COL.iron; g.fillRect(12, 54, 48, 2); }
   }
-  const ENEMY_DRAW = { yari: drawYari, teppo: drawTeppo, tate: drawTate, tateless: drawTateless };
+  // 變體可以替換這些繪製函式（在 buildAssets 之前）
+  const ENEMY_DRAW = (G.ENEMY_DRAW = { yari: drawYari, teppo: drawTeppo, tate: drawTate, tateless: drawTateless });
   G.ENEMY_FRAMES = ['w0', 'w1', 'wind', 'atk', 'reload', 'pain', 'dead'];
 
   /* ---------- 道具與特效 ---------- */
@@ -231,7 +232,8 @@
     line(g, 33, 20, 40, 30, 1.4, b.color); line(g, 40, 30, 38, 39, 1.4, b.color);
     if (b.id === 'mikazuki') { g.strokeStyle = '#ffffff'; g.lineWidth = 0.8; for (const y of [34, 43, 52]) { g.beginPath(); g.arc(32, y, 1.6, 0.2, Math.PI - 0.2); g.stroke(); } }
   }
-  const ITEMGEN = {
+  G.drawBladeItem = drawBladeItem;
+  const ITEMGEN = (G.ITEMGEN = {
     whetstone(g) {
       g.fillStyle = '#4a3424'; g.fillRect(18, 57, 28, 6);
       g.fillStyle = '#9a8f78'; g.fillRect(21, 50, 22, 8);
@@ -250,7 +252,9 @@
     paper(g) { g.fillStyle = '#efe9da'; poly(g, 10, 20, 24, 14, 22, 28); poly(g, 34, 8, 50, 14, 40, 24); poly(g, 30, 40, 44, 36, 46, 52); poly(g, 12, 44, 22, 40, 20, 54); },
     wood(g) { g.fillStyle = '#6f5034'; poly(g, 8, 30, 30, 22, 32, 26, 10, 34); poly(g, 36, 12, 44, 10, 50, 36, 44, 38); poly(g, 20, 44, 40, 48, 38, 52, 18, 48); },
     smoke(g) { g.fillStyle = '#8a8680'; circle(g, 32, 34, 16); circle(g, 20, 28, 10); circle(g, 44, 26, 11); g.fillStyle = '#a19c95'; circle(g, 30, 28, 9); },
-  };
+    bullet(g) { g.fillStyle = '#ff9a2a'; circle(g, 32, 32, 20); g.fillStyle = '#ffd27a'; circle(g, 32, 32, 13); g.fillStyle = '#fff6d8'; circle(g, 32, 32, 7); },
+    pbullet(g) { g.fillStyle = '#7fd1ff'; circle(g, 32, 32, 20); g.fillStyle = '#cfefff'; circle(g, 32, 32, 13); g.fillStyle = '#ffffff'; circle(g, 32, 32, 7); },
+  });
   function brazier(g, k) {
     line(g, 32, 41, 22, 63, 1.6, '#151515'); line(g, 32, 41, 42, 63, 1.6, '#151515'); line(g, 32, 41, 32, 63, 1.6, '#151515');
     g.fillStyle = '#222'; poly(g, 20, 30, 44, 30, 40, 42, 24, 42);
@@ -268,6 +272,7 @@
     let seed = 11;
     for (const k in TEXGEN) TEX[k] = makeTex(TEXGEN[k], seed++);
     for (const set in ENEMY_DRAW) {
+      if (!G.CONFIG.enemies[set]) continue;
       SPR[set] = {};
       for (const f of G.ENEMY_FRAMES) {
         SPR[set][f] = makeTex((g) => {
@@ -278,7 +283,7 @@
         }, seed++);
       }
     }
-    for (const b of G.CONFIG.blades) if (!b.infinite) SPR['blade_' + b.id] = makeTex((g) => drawBladeItem(g, b), seed++);
+    for (const b of G.CONFIG.blades) if (!b.infinite) SPR['blade_' + b.id] = makeTex((g) => G.drawBladeItem(g, b), seed++);
     for (const k in ITEMGEN) SPR[k] = makeTex((g, r) => ITEMGEN[k](g, r), seed++);
   };
 

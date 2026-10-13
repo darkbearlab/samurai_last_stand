@@ -25,5 +25,7 @@
     for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; }
     return a;
   };
+  // 文字：變體可在 G.CONFIG.text 覆寫；值可以是字串或函式
+  G.TX = (k, d, ...a) => { const t = G.CONFIG.text && G.CONFIG.text[k]; const v = t != null ? t : d; return typeof v === 'function' ? v(...a) : v; };
   G.fmtTime = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
 })();

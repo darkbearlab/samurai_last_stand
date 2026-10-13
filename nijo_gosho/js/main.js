@@ -25,7 +25,7 @@
       seed, W: M.W, H: M.H, grid: M.grid, doors: new Map(), enemies: [], items: L.items, decor: L.decor, fx: [],
       spawnPts: L.spawnPts, P, time: 0, kills: 0, state: 'play', paused: false, showMap: false,
       flow: null, flowT: 0, spawnT: C.director.grace, light: 0, shake: 0, hitStop: 0, ougiFlash: 0, pickT: 0, deadT: 0,
-      stats: { parry: 0, issen: 0, tome: 0, ougi: 0 },
+      stats: { parry: 0, issen: 0, tome: 0, ougi: 0 }, projs: [],
       kakugo: 0, kakugoNeed: C.kakugo.first, level: 0, jisei: 0, pendingUp: 0,
     });
     for (let i = 0; i < M.grid.length; i++) if (G.isDoor(M.grid[i])) S.doors.set(i, { o: 0, st: 0, hold: 0 });
@@ -68,7 +68,7 @@
     P.hurtT = Math.max(0, P.hurtT - dt);
     G.updateDoors(dt);
     S.flowT -= dt; if (S.flowT <= 0) { G.buildFlow(); S.flowT = 0.35; }
-    G.updateEnemies(dt);
+    G.updateEnemies(dt); G.updateProjs(dt);
     for (const f of S.fx) f.t -= dt; S.fx = S.fx.filter((f) => f.t > 0);
     if (S.state === 'play') { pickups(); director(dt); }
     if (S.state === 'dead') { S.deadT += dt; if (S.deadT > 1.4 && !G.screenShown) G.showScreen('dead'); }
@@ -91,7 +91,7 @@
           P.sharp[b.id] = Math.min(100, P.sharp[b.id] + (b.restore === 'whetstone' ? W.main : W.other)); any = true;
         }
         if (!any) return true;
-        G.sfx('pickup'); G.toast('砥石：名刀鋒利度恢復'); S.pickT = 0.25; return false;
+        G.sfx('pickup'); G.toast(G.TX('whetstone', '砥石：名刀鋒利度恢復')); S.pickT = 0.25; return false;
       }
       if (it.kind === 'onigiri') {
         const st = P.stats;

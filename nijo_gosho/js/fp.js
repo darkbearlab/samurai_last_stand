@@ -105,6 +105,12 @@
         uctx.fillStyle = 'rgba(226,85,59,.55)'; uctx.beginPath(); uctx.arc(x, y, Math.max(1, r), 0, Math.PI * 2); uctx.fill();
         continue;
       }
+      if (m.shot) { // 射出可見子彈：只預告開火時機，橘色
+        uctx.strokeStyle = 'rgba(255,170,80,.9)'; uctx.lineWidth = 2;
+        uctx.beginPath(); uctx.arc(x, y, R, 0, Math.PI * 2); uctx.stroke();
+        uctx.beginPath(); uctx.arc(x, y, Math.max(1, Math.min(r, R)), 0, Math.PI * 2); uctx.stroke();
+        continue;
+      }
       const pm = G.parryMul(), a = R * Math.max(0, 1 - (C.parryEarly * pm) / m.wind), b = R * (1 + (C.parryLate * pm) / m.wind), inBand = r >= a && r <= b;
       uctx.fillStyle = inBand ? 'rgba(255,214,120,.55)' : 'rgba(201,163,74,.28)';
       uctx.beginPath(); uctx.arc(x, y, b, 0, Math.PI * 2); uctx.arc(x, y, a, 0, Math.PI * 2, true); uctx.fill();

@@ -82,6 +82,7 @@
       else list.push({ x: it.x, y: it.y, t: G.SPR[it.kind], s: 1, l: 0 });
     }
     for (const d of S.decor) list.push({ kind: 'fire', x: d.x, y: d.y, t: G.SPR[((S.time * 6 + d.x) | 0) % 2 ? 'brazier1' : 'brazier0'], s: 1, l: 0, b: true });
+    for (const p of S.projs) list.push({ x: p.x, y: p.y, t: G.SPR[p.enemy ? 'bullet' : 'pbullet'], s: 0.22, l: 0.42, b: true });
     for (const f of S.fx) list.push({ x: f.x, y: f.y, t: G.SPR[f.spr], s: f.s, l: f.l, b: f.b });
     for (const s of list) s.d = (s.x - P.x) ** 2 + (s.y - P.y) ** 2;
     list.sort((a, b) => b.d - a.d);
@@ -94,7 +95,7 @@
       if (x0 >= x1 || y0 >= y1) continue;
       if (s.e && !s.e.dead && (s.e.phase === 'windup' || s.e.phase === 'aim')) {
         const col = G.clamp(scrX | 0, 0, W - 1), e = s.e;
-        if (tY < zbuf[col]) G.marks.push({ x: scrX, y: top + sz * 0.02, p: (e.wind - e.phT) / e.wind, wind: e.wind, gun: e.T.kind === 'gun', dist: tY });
+        if (tY < zbuf[col]) G.marks.push({ x: scrX, y: top + sz * 0.02, p: (e.wind - e.phT) / e.wind, wind: e.wind, gun: e.T.kind === 'gun', shot: e.T.kind === 'shooter', dist: tY });
       }
       const sh = s.b ? 256 : lightAt(tY, fog), k = 64 / sz, t = s.t;
       for (let x = x0; x < x1; x++) {

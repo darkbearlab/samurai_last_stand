@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover,user-scalable=no">
+<title>二條御所・銃</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@500;900&family=Noto+Sans+TC:wght@400;700&display=swap">
+<link rel="stylesheet" href="../nijo_gosho/css/style.css">
+</head>
+<body>
+<div id="app">
+  <div id="view">
+    <canvas id="cv" aria-label="遊戲畫面"></canvas>
+    <canvas id="ui" aria-hidden="true"></canvas>
+    <div id="toast" role="status"></div>
+    <div id="jisei" hidden aria-label="辭世之句"></div>
+    <div id="touch" hidden>
+      <div id="knob" hidden></div>
+      <button class="tbtn" id="tOugi" type="button">奧</button>
+      <button class="tbtn" id="tSwap" type="button">換</button>
+      <button class="tbtn" id="tParry" type="button">受</button>
+      <button class="tbtn" id="tAtk" type="button">斬</button>
+    </div>
+    <div id="screen"><div class="panel" id="panel"></div></div>
+  </div>
+  <div id="hud">
+    <div class="cell bars" id="hpCell">
+      <div class="bar"><span class="lbl">命</span><div class="track hp"><i id="bHp"></i></div><b id="vHp">100</b></div>
+      <div class="bar"><span class="lbl">氣</span><div class="track st"><i id="bSt"></i></div></div>
+    </div>
+    <div class="cell blade" id="sharpCell">
+      <div class="bname" id="bName">脇差</div>
+      <div class="bar"><span class="lbl">彈</span><div class="track sh"><i id="bSharp"></i></div></div>
+    </div>
+    <div class="cell slots" id="slots"></div>
+    <div class="cell ougi" id="ougiCell"><span class="lbl">一之太砲</span><div class="track og"><i id="bOugi"></i></div></div>
+    <div class="cell kakugo"><span class="lbl">覺悟 <b id="vLevel">0</b></span><div class="track kg"><i id="bKakugo"></i></div></div>
+    <div class="cell stat"><span class="lbl">時</span><b id="vTime">0:00</b></div>
+    <div class="cell stat"><span class="lbl">斬</span><b id="vKills">0</b></div>
+  </div>
+</div>
+<script src="../nijo_gosho/js/config.js"></script>
+<script src="../nijo_gosho/js/util.js"></script>
+<script src="../nijo_gosho/js/audio.js"></script>
+<script src="../nijo_gosho/js/assets.js"></script>
+<script src="../nijo_gosho/js/map.js"></script>
+<script src="../nijo_gosho/js/world.js"></script>
+<script src="../nijo_gosho/js/render.js"></script>
+<script src="../nijo_gosho/js/fp.js"></script>
+<script src="../nijo_gosho/js/enemies.js"></script>
+<script src="../nijo_gosho/js/combat.js"></script>
+<script src="../nijo_gosho/js/input.js"></script>
+<script src="../nijo_gosho/js/hud.js"></script>
+<script src="../nijo_gosho/js/main.js"></script>
+<script src="variant.js"></script>
+</body>
+</html>

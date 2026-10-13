@@ -28,7 +28,8 @@
     o.connect(g).connect(MASTER); o.start(t); o.stop(t + dur);
   }
 
-  const SFX = {
+  G.nz = (...a) => nz(...a); G.tn = (...a) => tn(...a);
+  const SFX = (G.SFX = {
     swing_light(v) { nz(0.12, 3400, 0.2 * v, 'bandpass', 1400); },
     swing_sweet(v) { nz(0.16, 2800, 0.28 * v, 'bandpass', 900); },
     swing_heavy(v) { nz(0.28, 1700, 0.38 * v, 'bandpass', 450); },
@@ -53,7 +54,8 @@
     tired(v) { tn('sine', 300, 200, 0.15, 0.08 * v); },
     tome(v) { tn('sine', 520, 260, 0.25, 0.14 * v); },
     dull(v) { tn('square', 300, 150, 0.2, 0.06 * v); },
-  };
+    eshot(v) { nz(0.25, 1600, 0.45 * v); tn('sine', 160, 70, 0.15, 0.15 * v); },
+  });
 
   G.sfx = function (name, dist) {
     if (!AC || !SFX[name]) return;

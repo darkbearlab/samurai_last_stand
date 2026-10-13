@@ -137,7 +137,7 @@
       let w = p.issen ? 0 : b.wear[p.zone]; if (blocked) w += 2;
       P.sharp[b.id] = Math.max(0, P.sharp[b.id] - w);
       if (p.zone === 'sweet' && b.restore === 'sweet' && !blocked) P.sharp[b.id] = Math.min(100, P.sharp[b.id] + b.sweetRestore);
-      if (before > 0 && P.sharp[b.id] <= 0) { G.toast(`${b.name} 鈍了`); G.sfx('dull'); }
+      if (before > 0 && P.sharp[b.id] <= 0) { G.toast(G.TX('dull', `${b.name} 鈍了`, b)); G.sfx('dull'); }
     }
     if (hits > 0 && !blocked) {
       if (p.zone === 'sweet') gainOugi(O.sweetGain * Math.min(hits, 2));
@@ -159,15 +159,16 @@
   function gainOugi(n) {
     const S = G.S, P = S.P, O = G.CONFIG.ougi, was = P.ougi;
     P.ougi = Math.min(O.max, P.ougi + n);
-    if (was < O.max && P.ougi >= O.max) G.toast('一之太刀 可發動');
+    if (was < O.max && P.ougi >= O.max) G.toast(G.TX('ougiReady', '一之太刀 可發動'));
   }
   G.gainOugi = gainOugi;
 
   /* 招架成功 */
   G.onParry = function (e) {
     const S = G.S, P = S.P, C = G.ps(), b = G.blade(P.cur);
-    e.painT = 1.1; e.phase = 'chase';
-    G.sfx('parry'); G.addFx(e.x + (P.x - e.x) * 0.45, e.y + (P.y - e.y) * 0.45, 'spark', 0.18, { b: true, l: 0.5, s: 0.3 });
+    G.sfx('parry');
+    if (e) { e.painT = 1.1; e.phase = 'chase'; G.addFx(e.x + (P.x - e.x) * 0.45, e.y + (P.y - e.y) * 0.45, 'spark', 0.18, { b: true, l: 0.5, s: 0.3 }); }
+    else G.addFx(P.x + Math.cos(P.a) * 0.6, P.y + Math.sin(P.a) * 0.6, 'spark', 0.18, { b: true, l: 0.5, s: 0.3 });
     P.issenT = C.issenWindow; P.st = Math.min(C.maxStamina, P.st + C.parrySt);
     gainOugi(G.CONFIG.ougi.parryGain);
     if (b.restore === 'parry') P.sharp[b.id] = Math.min(100, P.sharp[b.id] + b.parryRestore);
@@ -178,8 +179,8 @@
   function tryOugi() {
     const S = G.S, P = S.P, O = G.CONFIG.ougi, b = G.blade(P.cur);
     if (P.ougi < O.max) return;
-    if (b.infinite) { G.toast('需持名刀'); return; }
-    if (P.sharp[b.id] <= 0) { G.toast('刀已鈍'); return; }
+    if (b.infinite) { G.toast(G.TX('needMeito', '需持名刀')); return; }
+    if (P.sharp[b.id] <= 0) { G.toast(G.TX('isDull', '刀已鈍')); return; }
     if (P.act === 'swap') return;
     P.ougi = 0; P.sharp[b.id] = 0; S.stats.ougi++;
     let n = 0;
@@ -193,6 +194,6 @@
     }
     P.act = 'swing'; P.swingZone = 'heavy'; P.swingIssen = true; P.swingDur = 0.2; P.swingTotal = 0.5; P.actT = 0.5; P.swingFrom = -1.0; P.pending = null;
     S.ougiFlash = 0.9; S.hitStop = 0.15; S.shake = 0.6;
-    G.sfx('ougi'); G.toast(`一之太刀　斬 ${n}`);
+    G.sfx('ougi'); G.toast(G.TX('ougiDone', `一之太刀　斬 ${n}`, n));
   }
 })();
