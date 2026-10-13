@@ -16,7 +16,7 @@
   function setC(el, cls, on) { const k = el.id + cls; if (cache[k] !== on) { cache[k] = on; el.classList.toggle(cls, on); } }
 
   G.updateHud = function (dt) {
-    const S = G.S, P = S.P, C = G.CONFIG.player, b = G.blade(P.cur);
+    const S = G.S, P = S.P, C = G.ps(), b = G.blade(P.cur);
     setW('bHp', P.hp / C.maxHealth); setT('vHp', String(Math.ceil(P.hp)));
     setC($('hpCell'), 'low', P.hp <= 30);
     setW('bSt', P.st / C.maxStamina);
@@ -27,6 +27,8 @@
     setW('bOugi', P.ougi / G.CONFIG.ougi.max);
     setC($('ougiCell'), 'ready', P.ougi >= G.CONFIG.ougi.max);
     setT('vTime', G.fmtTime(S.time)); setT('vKills', String(S.kills));
+    setW('bKakugo', S.kakugo / S.kakugoNeed);
+    setT('vLevel', S.level >= G.CONFIG.kakugo.levelCap && !S.endless ? '辭' : String(S.level));
     for (const bl of G.CONFIG.blades) {
       const el = $('slot-' + bl.id);
       setC(el, 'own', !!P.owned[bl.id]); setC(el, 'cur', P.cur === bl.id);
@@ -35,6 +37,42 @@
       if (cache[k] !== v) { cache[k] = v; el.querySelector('i').style.width = v + '%'; }
     }
     if (toastT > 0) { toastT -= dt; if (toastT <= 0) $('toast').classList.remove('show'); }
+  };
+
+  /* 升級三選一：只抽已持有名刀的卡、未達疊加上限的卡 */
+  G.showUpgrade = function () {
+    const S = G.S, P = S.P, U = G.CONFIG.upgrades;
+    const pool = U.filter((u) => (!u.blade || P.owned[u.blade]) && (P.up[u.id] || 0) < u.max);
+    if (!pool.length) { S.pendingUp = 0; return; }
+    const picks = G.shuffle(pool.slice()).slice(0, 3);
+    G.screenShown = true; $('screen').hidden = false; G.IN.atkHeld = false;
+    if (document.pointerLockElement) try { document.exitPointerLock(); } catch (e) { /* 忽略 */ }
+    const bladeOf = (u) => (u.blade ? G.blade(u.blade) : null);
+    $('panel').innerHTML = `<div class="eyebrow">覺悟 · 第 ${S.level + 1} 段（上限 ${G.CONFIG.kakugo.levelCap}）</div><h1>覺悟</h1>
+      <div class="cards">${picks.map((u, i) => {
+        const b = bladeOf(u), lv = P.up[u.id] || 0;
+        return `<button class="card" type="button" data-i="${i}" style="--c:${b ? b.color : 'var(--kin)'}">
+          <span class="ck">${i + 1}</span><span class="ct">${u.text}</span>
+          <span class="cl">${'●'.repeat(lv + 1)}${'○'.repeat(u.max - lv - 1)}</span></button>`;
+      }).join('')}</div>`;
+    const choose = (i) => {
+      const u = picks[i]; if (!u) return;
+      removeEventListener('keydown', onKey, true);
+      u.apply(P); P.up[u.id] = (P.up[u.id] || 0) + 1; S.level++; S.pendingUp--;
+      G.sfx('blade'); G.toast(u.text);
+      G.hideScreen();
+    };
+    const onKey = (e) => { if (e.key >= '1' && e.key <= '3') { e.preventDefault(); e.stopPropagation(); choose(+e.key - 1); } };
+    addEventListener('keydown', onKey, true);
+    $('panel').querySelectorAll('.card').forEach((el) => el.addEventListener('click', () => { G.initAudio(); choose(+el.dataset.i); }));
+  };
+
+  /* 辭世之句：念到第幾段就顯示到第幾段（直書，畫面右側） */
+  G.showJisei = function () {
+    const S = G.S, L = G.CONFIG.jisei, el = $('jisei');
+    el.innerHTML = L.map((t, i) => `<span class="${i < S.jisei ? 'on' : ''}${i === S.jisei - 1 ? ' new' : ''}">${t}</span>`).join('');
+    el.hidden = S.jisei === 0;
+    if (S.jisei > 0) G.sfx('tome');
   };
 
   G.toast = function (t) { const el = $('toast'); el.textContent = t; el.classList.add('show'); toastT = 1.6; };
@@ -66,7 +104,9 @@
       <div><span class="lbl">一閃</span><span class="val">${S.stats.issen}</span></div>
       <div><span class="lbl">止め</span><span class="val">${S.stats.tome}</span></div>
       <div><span class="lbl">一之太刀</span><span class="val">${S.stats.ougi}</span></div>
-      <div><span class="lbl">名刀</span><span class="val">${Object.keys(S.P.owned).length - 1}/4</span></div></div>` : '';
+      <div><span class="lbl">名刀</span><span class="val">${Object.keys(S.P.owned).length - 1}/4</span></div>
+      <div><span class="lbl">覺悟</span><span class="val">${S.level}</span></div></div>
+      ${S.jisei ? `<p class="jisei-result">${G.CONFIG.jisei.map((t, i) => (i < S.jisei ? t : '<span class="blank">　</span>')).join('　')}</p>` : ''}` : '';
     const html = {
       start: `<div class="eyebrow">永祿八年五月十九日 · 原型 v${G.CONFIG.version}</div><h1>二條御所</h1>
         <p class="lead">御所已被包圍。手上只有一把脇差。去把散落在各房間的名刀收回來。</p>

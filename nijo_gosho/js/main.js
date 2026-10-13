@@ -17,22 +17,27 @@
       swingZone: 'light', swingDur: 0.2, swingTotal: 0.3, swingFrom: -1.9, swingIssen: false,
     };
     for (const b of C.blades) P.sharp[b.id] = 100;
+    // 這一局的數值複本：升級只改這裡，不動 CONFIG
+    P.stats = JSON.parse(JSON.stringify(C.player));
+    P.bl = {}; for (const b of C.blades) P.bl[b.id] = JSON.parse(JSON.stringify(b));
+    P.up = {}; P.trail = [];
     const S = (G.S = {
       seed, W: M.W, H: M.H, grid: M.grid, doors: new Map(), enemies: [], items: L.items, decor: L.decor, fx: [],
       spawnPts: L.spawnPts, P, time: 0, kills: 0, state: 'play', paused: false, showMap: false,
       flow: null, flowT: 0, spawnT: C.director.grace, light: 0, shake: 0, hitStop: 0, ougiFlash: 0, pickT: 0, deadT: 0,
       stats: { parry: 0, issen: 0, tome: 0, ougi: 0 },
+      kakugo: 0, kakugoNeed: C.kakugo.first, level: 0, jisei: 0, pendingUp: 0,
     });
     for (let i = 0; i < M.grid.length; i++) if (G.isDoor(M.grid[i])) S.doors.set(i, { o: 0, st: 0, hold: 0 });
     // 開局：幾名足輕已在遠處房間徘徊
     const far = M.rooms.filter((r) => L.dist[r.i] >= 2);
     G.shuffle(far).slice(0, 3).forEach((r) => G.spawnEnemy('yari', r.x0 + G.rnd(1, 4), r.y0 + G.rnd(1, 4), false));
-    G.buildFlow(); G.initHud(); G.updateHud(0);
+    G.buildFlow(); G.initHud(); G.updateHud(0); G.showJisei();
     return S;
   };
 
   function update(dt, realDt) {
-    const S = G.S, P = S.P, C = G.CONFIG.player, IN = G.IN;
+    const S = G.S, P = S.P, C = G.ps(), IN = G.IN;
     S.time += S.state === 'play' ? dt : 0;
     // 移動
     let fwd = 0, str = 0, turn = 0;
@@ -89,8 +94,9 @@
         G.sfx('pickup'); G.toast('砥石：名刀鋒利度恢復'); S.pickT = 0.25; return false;
       }
       if (it.kind === 'onigiri') {
-        if (P.hp >= C.player.maxHealth) return true;
-        P.hp = Math.min(C.player.maxHealth, P.hp + C.pickups.onigiri.heal);
+        const st = P.stats;
+        if (P.hp >= st.maxHealth) return true;
+        P.hp = Math.min(st.maxHealth, P.hp + st.onigiriHeal);
         G.sfx('pickup'); G.toast('握り飯'); S.pickT = 0.25; return false;
       }
       return true;
@@ -116,8 +122,20 @@
     if (type === 'tate' && Math.random() < 0.7) G.spawnEnemy('yari', pt.x + G.rnd(-0.2, 0.2), pt.y + G.rnd(-0.2, 0.2), true);
   }
 
+  /* 覺悟：每次斬殺累積，滿了就升級（三選一）；主模式到上限後改為念出辭世之句 */
+  G.onKill = function (tome) {
+    const S = G.S, K = G.CONFIG.kakugo;
+    S.kakugo += 1 + (tome ? K.tomeBonus : 0);
+    while (S.kakugo >= S.kakugoNeed) {
+      S.kakugo -= S.kakugoNeed; S.kakugoNeed += K.step;
+      if (S.level + S.pendingUp < K.levelCap || S.endless) S.pendingUp++;
+      else if (S.jisei < G.CONFIG.jisei.length) { S.jisei++; G.showJisei(); }
+    }
+  };
+
   G.hurtPlayer = function (d, heavy) {
     const S = G.S, P = S.P; if (S.state !== 'play') return;
+    d *= P.stats.dmgTaken;
     P.hp -= d; P.hurtT = 0.45; S.shake = Math.max(S.shake, 0.3); G.sfx('hurt');
     if (heavy && P.act === 'charge') { P.act = 'idle'; P.charge = 0; }
     if (P.hp <= 0) { P.hp = 0; S.state = 'dead'; S.deadT = 0; G.IN.atkHeld = false; }
@@ -133,6 +151,7 @@
       let gdt = dt; if (S.hitStop > 0) { S.hitStop -= dt; gdt = 0; }
       update(gdt, dt);
     }
+    if (S.pendingUp > 0 && S.state === 'play' && !G.screenShown) G.showUpgrade();
     G.updateHud(dt);
     G.draw();
     G.clearInputEdges();

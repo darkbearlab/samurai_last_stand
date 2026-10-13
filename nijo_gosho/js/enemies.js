@@ -11,6 +11,8 @@
     return e;
   };
 
+  // 招架窗口倍率：基礎升級 × 手上名刀（大典太較寬）
+  G.parryMul = function () { const P = G.S.P, b = G.blade(P.cur); return P.stats.parryMul * (b.parryMul || 1); };
   function facingPlayer(e) { const P = G.S.P; return Math.abs(G.angDiff(Math.atan2(e.y - P.y, e.x - P.x), P.a)) < 1.1; }
   function distTo(e) { const P = G.S.P; return Math.hypot(P.x - e.x, P.y - e.y); }
 
@@ -33,12 +35,13 @@
       if (T.kind === 'melee') {
         if (e.phase === 'windup') {
           e.phT -= dt;
-          const C = G.CONFIG.player;
+          const C = G.ps();
           if (e.phT <= 0) {
             // 出手瞬間已到：在容許時間內按下招架即成功，否則過了 parryLate 就命中
             const strikeAt = S.time + e.phT;
-            if (T.parryable && P.lastParry >= strikeAt - C.parryEarly && facingPlayer(e) && d <= T.reach + 0.35) { G.onParry(e); continue; }
-            if (e.phT <= -C.parryLate || !T.parryable) { strike(e, d); e.phase = 'recover'; e.phT = T.recover; }
+            const pm = G.parryMul();
+            if (T.parryable && P.lastParry >= strikeAt - C.parryEarly * pm && facingPlayer(e) && d <= T.reach + 0.35) { G.onParry(e); continue; }
+            if (e.phT <= -C.parryLate * pm || !T.parryable) { strike(e, d); e.phase = 'recover'; e.phT = T.recover; }
           }
           continue;
         }
@@ -65,7 +68,7 @@
         if (d > 0 && d < min) { const p = (min - d) / 2 / d; G.move(a, -dx * p, -dy * p, 0.25); G.move(b, dx * p, dy * p, 0.25); }
       }
       const dx = a.x - P.x, dy = a.y - P.y, d = Math.hypot(dx, dy), min = 0.55;
-      if (d > 0 && d < min) { const p = (min - d) / d; G.move(a, dx * p * 0.6, dy * p * 0.6, 0.25); G.move(P, -dx * p * 0.4, -dy * p * 0.4, G.CONFIG.player.radius); }
+      if (d > 0 && d < min) { const p = (min - d) / d; G.move(a, dx * p * 0.6, dy * p * 0.6, 0.25); G.move(P, -dx * p * 0.4, -dy * p * 0.4, G.ps().radius); }
     }
   };
 
@@ -99,7 +102,7 @@
     const S = G.S, P = S.P, T = e.T;
     e.atkT = 0.2;
     if (d > T.reach + 0.35 || !G.los(e.x, e.y, P.x, P.y)) { G.sfx('whiff', d); return; }
-    if (T.knock) { G.sfx('shove', d); G.move(P, ((P.x - e.x) / d) * T.knock, ((P.y - e.y) / d) * T.knock, G.CONFIG.player.radius); }
+    if (T.knock) { G.sfx('shove', d); G.move(P, ((P.x - e.x) / d) * T.knock, ((P.y - e.y) / d) * T.knock, G.ps().radius); }
     G.hurtPlayer(G.rint(T.damage[0], T.damage[1]), false);
   }
 
@@ -158,8 +161,9 @@
   function kill(e, tome) {
     const S = G.S, P = S.P, D = G.CONFIG.director;
     e.dead = true; e.painT = 0; S.kills++; G.sfx('die', distTo(e));
+    G.onKill(tome);
     if (tome) {
-      P.hp = Math.min(G.CONFIG.player.maxHealth, P.hp + G.CONFIG.player.tomeHeal);
+      P.hp = Math.min(G.ps().maxHealth, P.hp + G.ps().tomeHeal);
       S.stats.tome++; G.toast('止め'); G.sfx('tome');
     }
     const roll = Math.random();

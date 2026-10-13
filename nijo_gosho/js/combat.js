@@ -6,7 +6,7 @@
   const G = window.G;
 
   G.updateCombat = function (dt) {
-    const S = G.S, P = S.P, C = G.CONFIG.player, IN = G.IN;
+    const S = G.S, P = S.P, C = G.ps(), IN = G.IN;
     let b = G.blade(P.cur);
     P.parryCd -= dt; P.issenT -= dt; P.recoilT = Math.max(0, P.recoilT - dt); P.buffer -= dt;
 
@@ -55,7 +55,7 @@
 
     // 鬼丸：附近有火就恢復
     P.fireNear = false;
-    const oni = G.CONFIG.blades.find((x) => x.restore === 'fire');
+    const oniCfg = G.CONFIG.blades.find((x) => x.restore === 'fire'), oni = oniCfg && G.blade(oniCfg.id);
     if (oni && P.owned[oni.id]) {
       for (const d of S.decor) if (Math.hypot(d.x - P.x, d.y - P.y) <= oni.fireRadius) { P.fireNear = true; break; }
       if (P.fireNear) P.sharp[oni.id] = Math.min(100, P.sharp[oni.id] + oni.fireRate * dt);
@@ -68,7 +68,8 @@
     return list[(i + dir + list.length) % list.length].id;
   }
   function startSwap(id) {
-    const P = G.S.P; P.cur = id; P.act = 'swap'; P.actT = G.CONFIG.player.swapTime; P.charge = 0; P.pending = null;
+    const P = G.S.P; P.cur = id; P.act = 'swap'; P.actT = G.ps().swapTime; P.charge = 0; P.pending = null;
+    const b = G.blade(id); G.toast(`${b.name}：${b.role}`);
   }
   G.startSwap = startSwap;
   function tired() { G.sfx('tired'); G.toast('氣不足'); }
@@ -93,8 +94,9 @@
     const S = G.S, P = S.P, b = G.blade(P.cur), Z = G.CONFIG.zones[p.zone], O = G.CONFIG.ougi;
     const dull = !b.infinite && P.sharp[b.id] <= 0;
     const pierce = p.zone === 'heavy' && b.pierce && !dull;
-    const reach = pierce ? 3.0 : b.reach, arc = pierce ? 0.5 : b.arc;
-    const mult = Z.dmg * (p.issen ? G.CONFIG.player.issenMult : 1);
+    const reach = pierce ? b.pierceRange : b.reach, arc = pierce ? 0.5 : b.arc;
+    const zd = b.zoneDmg && b.zoneDmg[p.zone] != null ? b.zoneDmg[p.zone] : Z.dmg;
+    const mult = zd * (p.issen ? G.ps().issenMult : 1);
 
     const cands = [];
     for (const e of S.enemies) {
@@ -119,7 +121,7 @@
       }
       if (e.shield > 0) {
         const canBreak = !dull && (pierce || p.issen || (p.zone === 'heavy' && b.canBreakShield !== false));
-        if (canBreak) { G.damageShield(e, b.damage * mult * (pierce ? 1.4 : 1)); hits++; continue; }
+        if (canBreak) { G.damageShield(e, b.damage * mult * (b.shieldMult || 1)); hits++; continue; }
         G.sfx('clang'); G.addFx(e.x + (P.x - e.x) * 0.2, e.y + (P.y - e.y) * 0.2, 'spark', 0.12, { b: true, l: 0.45 });
         blocked = true; hits++; break;
       }
@@ -163,10 +165,10 @@
 
   /* 招架成功 */
   G.onParry = function (e) {
-    const S = G.S, P = S.P, C = G.CONFIG.player, b = G.blade(P.cur);
+    const S = G.S, P = S.P, C = G.ps(), b = G.blade(P.cur);
     e.painT = 1.1; e.phase = 'chase';
     G.sfx('parry'); G.addFx(e.x + (P.x - e.x) * 0.45, e.y + (P.y - e.y) * 0.45, 'spark', 0.18, { b: true, l: 0.5, s: 0.3 });
-    P.issenT = C.issenWindow; P.st = Math.min(C.maxStamina, P.st + 8);
+    P.issenT = C.issenWindow; P.st = Math.min(C.maxStamina, P.st + C.parrySt);
     gainOugi(G.CONFIG.ougi.parryGain);
     if (b.restore === 'parry') P.sharp[b.id] = Math.min(100, P.sharp[b.id] + b.parryRestore);
     S.stats.parry++; S.hitStop = 0.08; S.shake = Math.max(S.shake, 0.2);

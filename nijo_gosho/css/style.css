@@ -88,7 +88,25 @@ html, body { height: 100%; margin: 0; background: var(--urushi); color: var(--wa
   .cell { padding-inline: 8px; }
   .bname { font-size: 13px; }
 }
+/* 覺悟 */
+.track.kg { width: 90px; } .track.kg i { background: #b9a4d8; }
+.kakugo .lbl b { color: var(--washi); font-family: var(--f-serif); font-size: 13px; }
+.cards { display: flex; flex-direction: column; gap: 10px; }
+.card { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 14px; width: 100%; text-align: left; background: var(--kaba); color: var(--washi); border: 1px solid var(--line); border-left: 4px solid var(--c); padding: 14px 16px; font-family: var(--f-sans); font-size: 16px; cursor: pointer; }
+.card:hover, .card:focus-visible { border-color: var(--c); outline: none; background: #3a2c26; }
+.card .ck { font-family: var(--f-serif); font-weight: 900; color: var(--dim); }
+.card .ct { font-weight: 700; }
+.card .cl { color: var(--c); font-size: 11px; letter-spacing: .15em; white-space: nowrap; }
+/* 辭世之句：直書，畫面右側 */
+#jisei { position: absolute; right: 18px; top: 18px; display: flex; flex-direction: row-reverse; gap: 10px; writing-mode: vertical-rl; font-family: var(--f-serif); font-weight: 900; font-size: clamp(15px, 2.6vw, 22px); letter-spacing: .25em; pointer-events: none; }
+#jisei[hidden] { display: none; }
+#jisei span { color: rgba(232,224,204,.08); text-shadow: none; }
+#jisei span.on { color: var(--washi); text-shadow: 0 0 8px rgba(0,0,0,.9), 0 2px 0 #000; transition: color 1.2s; }
+#jisei span.new { color: #fff3d6; }
+.jisei-result { font-family: var(--f-serif); font-weight: 900; color: var(--washi) !important; font-size: 17px !important; letter-spacing: .1em; }
+.jisei-result .blank { display: inline-block; min-width: 4em; border-bottom: 1px solid var(--line); }
 @media (max-height: 480px), (max-width: 560px) {
+  .track.kg { width: 44px; }
   #hud { flex-wrap: nowrap; overflow: hidden; padding-block: 4px; }
   .cell { padding-inline: 6px; gap: 2px; }
   .track { width: 56px; height: 6px; } .track.og { width: 48px; }
