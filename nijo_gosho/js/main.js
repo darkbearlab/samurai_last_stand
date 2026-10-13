@@ -29,6 +29,8 @@
       kakugo: 0, kakugoNeed: C.kakugo.first, level: 0, jisei: 0, pendingUp: 0,
     });
     for (let i = 0; i < M.grid.length; i++) if (G.isDoor(M.grid[i])) S.doors.set(i, { o: 0, st: 0, hold: 0 });
+    S.wallHp = new Float32Array(M.grid.length);
+    for (let i = 0; i < M.grid.length; i++) { const w = C.walls.breakable[M.grid[i]]; if (w) S.wallHp[i] = w.hp; }
     // 開局：幾名足輕已在遠處房間徘徊
     const far = M.rooms.filter((r) => L.dist[r.i] >= 2);
     G.shuffle(far).slice(0, 3).forEach((r) => G.spawnEnemy('yari', r.x0 + G.rnd(1, 4), r.y0 + G.rnd(1, 4), false));

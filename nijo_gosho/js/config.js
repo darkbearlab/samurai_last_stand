@@ -139,7 +139,14 @@
 
     ougi: { max: 100, sweetGain: 8, parryGain: 18, issenGain: 12, range: 9 },
 
-    map: { rooms: 4, roomSize: 5, shojiChance: 0.2, paperDoorChance: 0.45, extraDoorChance: 0.25, braziers: 4, whetstones: 7, onigiri: 4 },
+    /* 可破壞的牆：外牆（W）與柱（P）是結構，打不壞；其餘依耐久值。
+       zoneMult：各蓄力段落對牆的傷害倍率 */
+    walls: {
+      breakable: { S: { hp: 20, fx: 'paper', sfx: 'shoji' }, J: { hp: 20, fx: 'paper', sfx: 'shoji' },
+                   K: { hp: 60, fx: 'wood', sfx: 'shieldbreak' }, D: { hp: 45, fx: 'wood', sfx: 'shieldbreak' } },
+      zoneMult: { light: 0.3, sweet: 0.6, heavy: 1.2 }, bulletMult: 0.6,
+    },
+    map: { rooms: 4, roomSize: 5, shojiChance: 0.2, structChance: 0.15, paperDoorChance: 0.45, extraDoorChance: 0.25, braziers: 4, whetstones: 7, onigiri: 4 },
   };
 
   // 遊戲中取得的是這一局的複本（會被升級修改）；沒有進行中的局時取設定原值

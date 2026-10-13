@@ -12,7 +12,7 @@
     const C = G.CONFIG.map, r = G.mulberry(seed);
     const N = C.rooms, RS = C.roomSize, P = RS + 1, W = N * P + 1, H = W;
     const grid = new Array(W * H).fill(0);
-    const at = (x, y) => y * W + x;
+    const at = (x, y) => y * W + x, segType = {};
 
     for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
       const onX = x % P === 0, onY = y % P === 0;
@@ -20,7 +20,12 @@
       const outer = x === 0 || y === 0 || x === W - 1 || y === H - 1;
       if (onX && onY) grid[at(x, y)] = 'P';
       else if (outer) grid[at(x, y)] = 'W';
-      else grid[at(x, y)] = r() < C.shojiChance ? 'S' : 'K';
+      else {
+        // 每一段牆（兩根柱之間）先決定是不是結構牆（白壁，打不壞）
+        const seg = onX ? 'v' + x + ',' + Math.floor(y / P) : 'h' + y + ',' + Math.floor(x / P);
+        if (!(seg in segType)) segType[seg] = r() < C.structChance ? 'W' : 'K';
+        grid[at(x, y)] = segType[seg] === 'W' ? 'W' : r() < C.shojiChance ? 'S' : 'K';
+      }
     }
 
     const rooms = [];

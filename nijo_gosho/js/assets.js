@@ -271,6 +271,14 @@
   G.buildAssets = function () {
     let seed = 11;
     for (const k in TEXGEN) TEX[k] = makeTex(TEXGEN[k], seed++);
+    // 受損版本：耐久剩一半以下時換成有刀痕、破洞的貼圖
+    for (const k of ['fusuma', 'door', 'shoji', 'shojiDoor']) TEX[k + '_d'] = makeTex((g, r) => {
+      TEXGEN[k](g, r);
+      g.strokeStyle = '#1a120c'; g.lineWidth = 2;
+      for (let i = 0; i < 3; i++) { const x = 8 + r() * 48, y = 6 + r() * 30; g.beginPath(); g.moveTo(x, y); g.lineTo(x + 14 - r() * 28, y + 10 + r() * 14); g.stroke(); }
+      g.fillStyle = '#120c08';
+      for (let i = 0; i < 2; i++) { const x = 10 + r() * 40, y = 8 + r() * 26; poly(g, x, y, x + 8, y + 2, x + 10, y + 9, x + 2, y + 11, x - 2, y + 5); }
+    }, seed++);
     for (const set in ENEMY_DRAW) {
       if (!G.CONFIG.enemies[set]) continue;
       SPR[set] = {};

@@ -62,7 +62,8 @@
         farD[x] = dist; c = R.pc; dist = Math.max(R.pd, 0.0001); u = R.pu; side = R.pside;
       }
       zbuf[x] = dist; if (!c) continue;
-      const t = G.TEX[G.WALLTEX[c]];
+      const hx = R.pc ? R.pmx : R.mx, hy = R.pc ? R.pmy : R.my;
+      const tn = G.WALLTEX[c], t = G.wallDamaged(hx, hy) && G.TEX[tn + '_d'] ? G.TEX[tn + '_d'] : G.TEX[tn];
       let tx = Math.min(63, (u * 64) | 0);
       if ((side === 0 && rdx > 0) || (side === 1 && rdy < 0)) tx = 63 - tx;
       const lh = H / dist, top = half - lh / 2, y0 = Math.max(0, Math.ceil(top)), y1 = Math.min(H, Math.ceil(top + lh));

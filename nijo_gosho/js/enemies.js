@@ -153,7 +153,7 @@
     S.projs = S.projs.filter((p) => {
       p.x += p.vx * dt; p.y += p.vy * dt; p.life -= dt;
       if (p.life <= 0) return false;
-      if (G.solidAt(p.x, p.y)) { G.addFx(p.x - p.vx * 0.03, p.y - p.vy * 0.03, 'spark', 0.12, { b: true, l: 0.45, s: 0.15 }); return false; }
+      if (G.solidAt(p.x, p.y)) { G.damageWall(Math.floor(p.x), Math.floor(p.y), p.dmg * G.CONFIG.walls.bulletMult); G.addFx(p.x - p.vx * 0.03, p.y - p.vy * 0.03, 'spark', 0.12, { b: true, l: 0.45, s: 0.15 }); return false; }
       if (p.enemy) {
         const d = Math.hypot(p.x - P.x, p.y - P.y);
         if (d < 0.75 && S.time - P.lastParry < 0.3 * G.parryMul() && S.state === 'play') {

@@ -130,7 +130,8 @@
       hits++;
     }
 
-    if (p.zone === 'heavy' && !dull) tryBreakShoji(b.reach + 0.4);
+    // 打牆：沒砍到人時砍到面前的牆；重段即使砍到人也會連牆一起破
+    if (hits === 0 || p.zone === 'heavy') hitWall(b.damage * mult * G.CONFIG.walls.zoneMult[p.zone] * (dull ? 0.3 : 1), (pierce ? b.pierceRange : b.reach) + 0.4);
 
     if (hits > 0 && !b.infinite) {
       const before = P.sharp[b.id];
@@ -148,12 +149,10 @@
     if (blocked) P.recoilT = 0.25;
   }
 
-  function tryBreakShoji(reach) {
-    const S = G.S, P = S.P, R = G.cast(P.x, P.y, Math.cos(P.a), Math.sin(P.a));
-    if (R.c !== 'S' || R.dist > reach) return;
-    S.grid[R.my * S.W + R.mx] = 0; S.flowT = 0;
-    G.sfx('shoji');
-    for (let i = 0; i < 4; i++) G.addFx(R.mx + 0.5 + G.rnd(-0.3, 0.3), R.my + 0.5 + G.rnd(-0.3, 0.3), 'paper', 0.5, { l: G.rnd(0.2, 0.7), s: 0.3 });
+  function hitWall(amt, reach) {
+    const P = G.S.P, R = G.cast(P.x, P.y, Math.cos(P.a), Math.sin(P.a));
+    if (!R.c || R.dist > reach) return;
+    if (G.damageWall(R.mx, R.my, amt)) G.S.shake = Math.max(G.S.shake, 0.25);
   }
 
   function gainOugi(n) {
@@ -191,6 +190,11 @@
       if (Math.abs(G.angDiff(Math.atan2(dy, dx), P.a)) > 0.75) continue;
       if (!G.los(P.x, P.y, e.x, e.y)) continue;
       e.shield = 0; G.addFx(e.x, e.y, 'blood', 0.4, { l: 0.45, s: 0.35 }); G.killEnemy(e, false); n++;
+    }
+    // 視野內的牆也一起斬開（結構牆除外）
+    for (let k = -6; k <= 6; k++) {
+      const a = P.a + k * 0.12, R = G.cast(P.x, P.y, Math.cos(a), Math.sin(a));
+      if (R.c && R.dist <= O.range) G.damageWall(R.mx, R.my, 999);
     }
     P.act = 'swing'; P.swingZone = 'heavy'; P.swingIssen = true; P.swingDur = 0.2; P.swingTotal = 0.5; P.actT = 0.5; P.swingFrom = -1.0; P.pending = null;
     S.ougiFlash = 0.9; S.hitStop = 0.15; S.shake = 0.6;

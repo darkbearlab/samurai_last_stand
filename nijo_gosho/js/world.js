@@ -47,7 +47,7 @@
       const d = side === 0 ? sdx - ddx : sdy - ddy;
       let u = side === 0 ? py + d * rdy : px + d * rdx; u -= Math.floor(u);
       if (G.isDoor(c)) { const o = G.doorOpen(mx, my); if (u < o) continue; u -= o; }
-      if (seePaper && !RAY.pc && G.isPaper(c)) { RAY.pc = c; RAY.pd = d; RAY.pu = u; RAY.pside = side; continue; }
+      if (seePaper && !RAY.pc && G.isPaper(c)) { RAY.pc = c; RAY.pd = d; RAY.pu = u; RAY.pside = side; RAY.pmx = mx; RAY.pmy = my; continue; }
       RAY.c = c; RAY.dist = d; RAY.side = side; RAY.u = u; RAY.mx = mx; RAY.my = my;
       return RAY;
     }
@@ -88,6 +88,21 @@
       }
     }
   };
+
+  /* 打牆：結構牆不受影響；耐久歸零就整格消失（門也一起拆掉） */
+  G.damageWall = function (x, y, amt) {
+    const S = G.S, i = y * S.W + x, c = S.grid[i], W = G.CONFIG.walls.breakable[c];
+    if (!W || amt <= 0) return false;
+    const cx = x + 0.5, cy = y + 0.5, dist = Math.hypot(S.P.x - cx, S.P.y - cy);
+    S.wallHp[i] -= amt;
+    G.addFx(cx + G.rnd(-0.3, 0.3), cy + G.rnd(-0.3, 0.3), W.fx, 0.3, { l: G.rnd(0.3, 0.6), s: 0.25 });
+    if (S.wallHp[i] > 0) { G.sfx(W.fx === 'paper' ? 'shoji' : 'wood', dist); return false; }
+    S.grid[i] = 0; S.doors.delete(i); S.flowT = 0;
+    G.sfx(W.sfx, dist);
+    for (let k = 0; k < 5; k++) G.addFx(cx + G.rnd(-0.4, 0.4), cy + G.rnd(-0.4, 0.4), W.fx, 0.6, { l: G.rnd(0.1, 0.8), s: 0.3 });
+    return true;
+  };
+  G.wallDamaged = function (x, y) { const S = G.S, i = y * S.W + x, W = G.CONFIG.walls.breakable[S.grid[i]]; return W && S.wallHp[i] < W.hp * 0.55; };
 
   G.addFx = function (x, y, spr, t, o) {
     G.S.fx.push(Object.assign({ x, y, spr, t: t || 0.2, l: 0.4, s: 0.22, b: false }, o || {}));
