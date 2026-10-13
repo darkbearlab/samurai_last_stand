@@ -19,10 +19,10 @@
       chargeTime: 0.85,    // 從 0 蓄到滿所需秒數
       chargeCost: 36,      // 蓄滿總共消耗的氣
       tapCost: 6,          // 每次出手最低消耗
-      parryCost: 12, parryCooldown: 0.35,
+      parryCost: 12, parryCooldown: 0.25,
       // 招架判定：敵人頭上的擴張圈碰到外圈的那一刻為出手瞬間，
       // 在出手前 parryEarly 秒到出手後 parryLate 秒之間按下招架即成功
-      parryEarly: 0.16, parryLate: 0.1,
+      parryEarly: 0.35, parryLate: 0.2,
       issenWindow: 0.9, issenMult: 3,
       swapTime: 0.3,
       tomeHeal: 10,        // 對硬直中的敵人補上致命一刀時回血（暫定）
